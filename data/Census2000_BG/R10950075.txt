@@ -1,0 +1,526 @@
+--------------------------------------------------------------------------------
+Codebook for Social Explorer report ID: R10950075
+--------------------------------------------------------------------------------
+
+Contents
+    - Table Summary
+    - Data Dictionary
+    - Citation and Use
+
+
+--------------------------------------------------------------------------------
+Table Summary
+--------------------------------------------------------------------------------
+ 
+Survey:           Census 2000
+Dataset:          Social Explorer Tables (made from SF1 and SF3)
+Tables:
+
+      1. Total Population
+         Universe:  Total Population
+         Name:      T1
+         Variables:
+            T001_001:   Total Population
+
+
+      2. Land Area (sq. miles)
+         Universe:  Area Total
+         Name:      T4
+         Variables:
+            T004_001:   Area Total:
+            T004_002:      Area (Land)
+            T004_003:      Area (Water)
+
+
+      3. Age
+         Universe:  Total Population
+         Name:      T8
+         Variables:
+            T008_001:   Total Population:
+            T008_002:      Under 5 years
+            T008_003:      5 to 9 years
+            T008_004:      10 to 14 years
+            T008_005:      15 to 17 years
+            T008_006:      18 to 24 years
+            T008_007:      25 to 34 years
+            T008_008:      35 to 44 years
+            T008_009:      45 to 54 years
+            T008_010:      55 to 64 years
+            T008_011:      65 to 74 years
+            T008_012:      75 to 84 years
+            T008_013:      85 years and over
+
+
+      4. Race
+         Universe:  Total Population
+         Name:      T14
+         Variables:
+            T014_001:   Total Population:
+            T014_002:      White Alone
+            T014_003:      Black or African American Alone
+            T014_004:      American Indian and Alaska Native Alone
+            T014_005:      Asian Alone
+            T014_006:      Native Hawaiian and Other Pacific Islander Alone
+            T014_007:      Some other race Alone
+            T014_008:      Two or more races
+
+
+      5. Hispanic Or Latino By Race
+         Universe:  Total Population
+         Name:      T15
+         Variables:
+            T015_001:   Total Population
+            T015_002:      Not Hispanic or Latino:
+            T015_003:         White Alone
+            T015_004:         Black or African American Alone
+            T015_005:         American Indian and Alaska Native Alone
+            T015_006:         Asian Alone
+            T015_007:         Native Hawaiian and Other Pacific Islander Alone
+            T015_008:         Some other race Alone
+            T015_009:         Two or more races
+            T015_010:      Hispanic or Latino:
+            T015_011:         White Alone
+            T015_012:         Black or African American Alone
+            T015_013:         American Indian and Alaska Native Alone
+            T015_014:         Asian Alone
+            T015_015:         Native Hawaiian and Other Pacific Islander Alone
+            T015_016:         Some other race Alone
+            T015_017:         Two or more races
+
+
+      6. Educational Attainment For Population 25 Years And Over
+         Universe:  Population 25 years and over
+         Name:      T40
+         Variables:
+            T040_001:   Population 25 years and over:
+            T040_002:      Less Than High School
+            T040_003:      High School Graduate (includes equivalency)
+            T040_004:      Some college
+            T040_005:      Bachelor's degree
+            T040_006:      Master's degree
+            T040_007:      Professional school degree
+            T040_008:      Doctorate degree
+
+
+      7. Cumulative Educational Attainment For Population 25 Years And Over
+         Universe:  Population 25 years and over
+         Name:      T43
+         Variables:
+            T043_001:   Population 25 years and over:
+            T043_002:      Less Than High School
+            T043_003:      High School Graduate or more (includes equivalency)
+            T043_004:      Some college or more
+            T043_005:      Bachelor's degree or more
+            T043_006:      Master's degree or more
+            T043_008:      Professional school degree or more
+            T043_007:      Doctorate degree
+
+
+      8. School Enrollment For The Population 3 Years And Over
+         Universe:  Population 3 years and over
+         Name:      T55
+         Variables:
+            T055_001:   Population 3 years and over:
+            T055_002:      Enrolled In School
+            T055_003:      Not Enrolled In School
+
+
+      9. School Dropout Rate For Population 16 To 19 Years
+         Universe:  Civilian Population 16 to 19 years
+         Name:      T59
+         Variables:
+            T059_001:   Civilian Population 16 to 19 years:
+            T059_002:      Not high school graduate, not enrolled (dropped out)
+            T059_003:      High school graduate, or enrolled (in school)
+
+
+      10. School Dropout Rate For The Population 16 To 19 Years (White Alone)
+          Universe:  White Civilian Population 16 to 19 years
+          Name:      T60
+          Variables:
+             T060_001:   White Civilian Population 16 to 19 years:
+             T060_002:      Not high school graduate, not enrolled (dropped out)
+             T060_003:      High school graduate, or enrolled (in school)
+
+
+      11. School Dropout Rate For The Population 16 To 19 Years (Black Or African American Alone)
+          Universe:  Black or African American Civilian Population 16 to 19 years
+          Name:      T61
+          Variables:
+             T061_001:   Black or African American Civilian Population 16 to 19 years:
+             T061_002:      Not high school graduate, not enrolled (dropped out)
+             T061_003:      High school graduate, or enrolled (in school)
+
+
+      12. School Dropout Rate For The Population 16 To 19 Years (American Indian And Alaska Native Alone)
+          Universe:  American Indian and Alaska Native Civilian Population 16 to 19 years
+          Name:      T62
+          Variables:
+             T062_001:   American Indian and Alaska Native Civilian Population 16 to 19 years:
+             T062_002:      Not high school graduate, not enrolled (dropped out)
+             T062_003:      High school graduate, or enrolled (in school)
+
+
+      13. School Dropout Rate For The Population 16 To 19 Years (Asian Alone)
+          Universe:  Asian Civilian Population 16 to 19 years
+          Name:      T63
+          Variables:
+             T063_001:   Asian Civilian Population 16 to 19 years:
+             T063_002:      Not high school graduate, not enrolled (dropped out)
+             T063_003:      High school graduate, or enrolled (in school)
+
+
+      14. Employment Status For Total Population 16 Years And Over
+          Universe:  Population 16 years and over
+          Name:      T69
+          Variables:
+             T069_001:   Population 16 years and over:
+             T069_002:      In labor force:
+             T069_003:         In Armed Forces
+             T069_004:         Civilian:
+             T069_005:            Employed
+             T069_006:            Unemployed
+             T069_007:      Not in labor force
+
+
+      15. Household Income In <DollarYear> Dollars
+          Universe:  Households
+          Name:      T92
+          Variables:
+             T092_001:   Households:
+             T092_002:      Less than $10,000
+             T092_003:      $10,000 to $14,999
+             T092_004:      $15,000 to $19,999
+             T092_005:      $20,000 to $24,999
+             T092_006:      $25,000 to $29,999
+             T092_007:      $30,000 to $34,999
+             T092_008:      $35,000 to $39,999
+             T092_009:      $40,000 to $44,999
+             T092_010:      $45,000 to $49,999
+             T092_011:      $50,000 to $59,999
+             T092_012:      $60,000 to $74,999
+             T092_013:      $75,000 to $99,999
+             T092_014:      $100,000 to $124,999
+             T092_015:      $125,000 to $149,999
+             T092_016:      $150,000 to $199,999
+             T092_017:      $200,000 or more
+
+
+      16. Median Household Income In <DollarYear> Dollars
+          Universe:  Households
+          Name:      T93
+          Variables:
+             T093_001:   Median household income In 1999 Dollars
+
+
+      17. Average Household Income In <DollarYear> Dollars
+          Universe:  Households
+          Name:      T96
+          Variables:
+             T096_001:   Average household income In 1999 Dollars
+
+
+      18. Income In <DollarYear> Dollars For The Population 15+ Years
+          Universe:  Population 15 years and over
+          Name:      T102
+          Variables:
+             T102_001:   Population 15+ Years:
+             T102_002:      No income
+             T102_003:      With income:
+             T102_004:         $1 to $2,499 or loss
+             T102_005:         $2,500 to $4,999
+             T102_006:         $5,000 to $7,499
+             T102_007:         $7,500 to $9,999
+             T102_008:         $10,000 to $12,499
+             T102_009:         $12,500 to $14,999
+             T102_010:         $15,000 to $17,499
+             T102_011:         $17,500 to $19,999
+             T102_012:         $20,000 to $22,499
+             T102_013:         $22,500 to $24,999
+             T102_014:         $25,000 to $29,999
+             T102_015:         $30,000 to $34,999
+             T102_016:         $35,000 to $39,999
+             T102_017:         $40,000 to $44,999
+             T102_018:         $45,000 to $49,999
+             T102_019:         $50,000 to $54,999
+             T102_020:         $55,000 to $64,999
+             T102_021:         $65,000 to $74,999
+             T102_022:         $75,000 to $99,999
+             T102_023:         $100,000 or more
+
+
+      19. Per Capita Income In <DollarYear> Dollars
+          Universe:  Total Population
+          Name:      T145
+          Variables:
+             T145_001:   Per capita income In 1999 Dollars
+
+
+      20. Per Capita Income In <DollarYear> Dollars (White Alone)
+          Universe:  White Alone Population
+          Name:      T146
+          Variables:
+             T146_001:   Per capita income In 1999 Dollars
+
+
+      21. Per Capita Income In <DollarYear> Dollars (Black Or African American Alone)
+          Universe:  Black or African American Alone Population
+          Name:      T147
+          Variables:
+             T147_001:   Per capita income In 1999 Dollars
+
+
+      22. Per Capita Income In <DollarYear> Dollars (Hispanic Or Latino)
+          Universe:  Hispanic or Latino Population
+          Name:      T153
+          Variables:
+             T153_001:   Per capita income In 1999 Dollars
+
+
+
+
+
+ 
+ 
+ 
+--------------------------------------------------------------------------------
+Data Dictionary
+--------------------------------------------------------------------------------
+ 
+Variables 
+      FIPS:           FIPS
+      NAME:           Area Name-Legal/Statistical Area Description
+      QName:          Qualifying Name
+      FILEID:         File Identification
+      STUSAB:         State/U.S.-Abbreviation (USPS)
+      SUMLEV:         Summary Level
+      GEOCOMP:        Geographic Component
+      CHARITER:       Characteristic Iteration
+      CIFSN:          Characteristic Iteration File Sequence Number
+      LOGRECNO:       Logical Record Number
+      REGION:         Region
+      DIVISION:       Division
+      STATECE:        State (Census)
+      STATE:          State (FIPS)
+      COUNTY:         County
+      COUNTYSC:       County Size Code
+      COUSUB:         County Subdivision (FIPS)
+      COUSUBCC:       FIPS County Subdivision Class Code
+      COUSUBSC:       County Subdivision Size Code
+      PLACE:          Place (FIPS)
+      PLACECC:        FIPS Place Class Code
+      PLACESC:        Place Size Code
+      TRACT:          Census Tract
+      BLKGRP:         Block Group
+      BLOCK:          Block
+      IUC:            Internal Use Code
+      CONCIT:         Consolidated City (FIPS)
+      CONCITCC:       FIPS Consolidated City Class Code
+      CONCITSC:       Consolidated City Size Code
+      AIANHH:         American Indian Area/Alaska Native Area/Hawaiian Home Land (Census)
+      AIANHHFP:       American Indian Area/Alaska Native Area/Hawaiian Home Land (FIPS)
+      AIANHHCC:       FIPS American Indian Area/Alaska Native Area/Hawaiian Home Land Class Code
+      AIHHTLI:        American Indian Trust Land/Hawaiian Home Land Indicator
+      AITSCE:         American Indian Tribal Subdivision (Census)
+      AITS:           American Indian Tribal Subdivision (FIPS)
+      AITSCC:         FIPS American Indian Tribal Subdivision Class Code
+      ANRC:           Alaska Native Regional Corporation (FIPS)
+      ANRCCC:         FIPS Alaska Native Regional Corporation Class Code
+      MSACMSA:        Metropolitan Statistical Area/Consolidated Metropolitan Statistical Area
+      MASC:           MSA/CMSA Size Code
+      CMSA:           Consolidated Metropolitan Statistical Area
+      MACCI:          Metropolitan Area Central City Indicator
+      PMSA:           Primary Metropolitan Statistical Area
+      NECMA:          New England County Metropolitan Area
+      NECMACCI:       New England County Metropolitan Area Central City Indicator
+      NECMASC:        New England County Metropolitan Area Size Code
+      EXI:            Extended Place Indicator
+      UA:             Urban Area
+      UASC:           Urban Area Size Code
+      UATYPE:         Urban Area Type
+      UR:             Urban/Rural
+      CD106:          Congressional District (106th)
+      CD108:          Congressional District (108th)
+      CD109:          Congressional District (109th)
+      CD110:          Congressional District (110th)
+      SLDU:           State Legislative District (Upper Chamber)
+      SLDL:           State Legislative District (Lower Chamber)
+      VTD:            Voting District
+      VTDI:           Voting District Indicator
+      ZCTA3:          ZIP Code Tabulation Area (3 digit)
+      ZCTA5:          ZIP Code Tabulation Area (5 digit)
+      SUBMCD:         Subbarrio (FIPS)
+      SUBMCDCC:       FIPS Subbarrio Class Code
+      AREALAND:       Area (Land)
+      AREAWATR:       Area (Water)
+      FUNCSTAT:       Functional Status Code
+      GCUNI:          Geographic Change User Note Indicator
+      POP100:         Population Count (100%)
+      HU100:          Housing Unit Count (100%)
+      INTPTLAT:       Internal Point (Latitude)
+      INTPTLON:       Internal Point (Longitude)
+      LSADC:          Legal/Statistical Area Description Code
+      PARTFLAG:       Part Flag
+      SDELM:          School District (Elementary)
+      SDSEC:          School District (Secondary)
+      SDUNI:          School District (Unified)
+      TAZ:            Traffic Analysis Zone
+      UGA:            Oregon Urban Growth Area
+      PUMA5:          Public Use Microdata Area - 5% File
+      PUMA1:          Public Use Microdata Area - 1% File
+      RESERVE2:       Reserved
+      MACC:           Metropolitan Area Central City
+      UACP:           Urban Area Central Place
+      RESERVED:       Reserved
+      T001_001:       Total Population
+      T004_001:       Area Total
+      T004_002:       Area (Land)
+      T004_003:       Area (Water)
+      T008_001:       Total Population
+      T008_002:       Under 5 years
+      T008_003:       5 to 9 years
+      T008_004:       10 to 14 years
+      T008_005:       15 to 17 years
+      T008_006:       18 to 24 years
+      T008_007:       25 to 34 years
+      T008_008:       35 to 44 years
+      T008_009:       45 to 54 years
+      T008_010:       55 to 64 years
+      T008_011:       65 to 74 years
+      T008_012:       75 to 84 years
+      T008_013:       85 years and over
+      T014_001:       Total Population
+      T014_002:       White Alone
+      T014_003:       Black or African American Alone
+      T014_004:       American Indian and Alaska Native Alone
+      T014_005:       Asian Alone
+      T014_006:       Native Hawaiian and Other Pacific Islander Alone
+      T014_007:       Some other race Alone
+      T014_008:       Two or more races
+      T015_001:       Total Population
+      T015_002:       Not Hispanic or Latino
+      T015_003:       Not Hispanic or Latino: White Alone
+      T015_004:       Not Hispanic or Latino: Black or African American Alone
+      T015_005:       Not Hispanic or Latino: American Indian and Alaska Native Alone
+      T015_006:       Not Hispanic or Latino: Asian Alone
+      T015_007:       Not Hispanic or Latino: Native Hawaiian and Other Pacific Islander Alone
+      T015_008:       Not Hispanic or Latino: Some other race Alone
+      T015_009:       Not Hispanic or Latino: Two or more races
+      T015_010:       Hispanic or Latino
+      T015_011:       Hispanic or Latino: White Alone
+      T015_012:       Hispanic or Latino: Black or African American Alone
+      T015_013:       Hispanic or Latino: American Indian and Alaska Native Alone
+      T015_014:       Hispanic or Latino: Asian Alone
+      T015_015:       Hispanic or Latino: Native Hawaiian and Other Pacific Islander Alone
+      T015_016:       Hispanic or Latino: Some other race Alone
+      T015_017:       Hispanic or Latino: Two or more races
+      T040_001:       Population 25 years and over
+      T040_002:       Population 25 years and over: Less Than High School
+      T040_003:       Population 25 years and over: High School Graduate (includes equivalency)
+      T040_004:       Population 25 years and over: Some college
+      T040_005:       Population 25 years and over: Bachelor's degree
+      T040_006:       Population 25 years and over: Master's degree
+      T040_007:       Population 25 years and over: Professional school degree
+      T040_008:       Population 25 years and over: Doctorate degree
+      T043_001:       Population 25 years and over
+      T043_002:       Population 25 years and over: Less Than High School
+      T043_003:       Population 25 years and over: High School Graduate or more (includes equivalency)
+      T043_004:       Population 25 years and over: Some college or more
+      T043_005:       Population 25 years and over: Bachelor's degree or more
+      T043_006:       Population 25 years and over: Master's degree or more
+      T043_008:       Population 25 years and over: Professional school degree or more
+      T043_007:       Population 25 years and over: Doctorate degree
+      T055_001:       Population 3 years and over
+      T055_002:       Population 3 years and over: Enrolled In School
+      T055_003:       Population 3 years and over: Not Enrolled In School
+      T059_001:       Civilian Population 16 to 19 years
+      T059_002:       Civilian Population 16 to 19 years: Not high school graduate, not enrolled (drop out)
+      T059_003:       Civilian Population 16 to 19 years: High school graduate, or enrolled (in school)
+      T060_001:       White Civilian Population 16 to 19 years
+      T060_002:       White Civilian Population 16 to 19 years: Not high school graduate, not enrolled (drop out)
+      T060_003:       White Civilian Population 16 to 19 years: High school graduate, or enrolled (in school)
+      T061_001:       Black or African American Civilian Population 16 to 19 years
+      T061_002:       Black or African American Civilian Population 16 to 19 years: Not high school graduate, not enrolled (drop out)
+      T061_003:       Black or African American Civilian Population 16 to 19 years: High school graduate, or enrolled (in school)
+      T062_001:       American Indian and Alaska Native Civilian Population 16 to 19 years
+      T062_002:       American Indian and Alaska Native Civilian Population 16 to 19 years: Not high school graduate, not enrolled (drop out)
+      T062_003:       American Indian and Alaska Native Civilian Population 16 to 19 years: High school graduate, or enrolled (in school)
+      T063_001:       Asian Civilian Population 16 to 19 years
+      T063_002:       Asian Civilian Population 16 to 19 years: Not high school graduate, not enrolled (drop out)
+      T063_003:       Asian Civilian Population 16 to 19 years: High school graduate, or enrolled (in school)
+      T069_001:       Population 16 years and over
+      T069_002:       Population 16 years and over: In labor force
+      T069_003:       Population 16 years and over: In labor force: In Armed Forces
+      T069_004:       Population 16 years and over: In labor force: Civilian
+      T069_005:       Population 16 years and over: In labor force: Civilian: Employed
+      T069_006:       Population 16 years and over: In labor force: Civilian: Unemployed
+      T069_007:       Population 16 years and over: Not in labor force
+      T092_001:       Households
+      T092_002:       Household Income: Less than $10,000
+      T092_003:       Household Income: $10,000 to $14,999
+      T092_004:       Household Income: $15,000 to $19,999
+      T092_005:       Household Income: $20,000 to $24,999
+      T092_006:       Household Income: $25,000 to $29,999
+      T092_007:       Household Income: $30,000 to $34,999
+      T092_008:       Household Income: $35,000 to $39,999
+      T092_009:       Household Income: $40,000 to $44,999
+      T092_010:       Household Income: $45,000 to $49,999
+      T092_011:       Household Income: $50,000 to $59,999
+      T092_012:       Household Income: $60,000 to $74,999
+      T092_013:       Household Income: $75,000 to $99,999
+      T092_014:       Household Income: $100,000 to $124,999
+      T092_015:       Household Income: $125,000 to $149,999
+      T092_016:       Household Income: $150,000 to $199,999
+      T092_017:       Household Income: $200,000 or more
+      T093_001:       Median household income In 1999 Dollars
+      T096_001:       Average household income In 1999 Dollars
+      T102_001:       Population 15+ Years
+      T102_002:       Population 15+ Years: No income
+      T102_003:       Population 15+ Years: With income
+      T102_004:       Population 15+ Years: With income: $1 to $2,499 or loss
+      T102_005:       Population 15+ Years: With income: $2,500 to $4,999
+      T102_006:       Population 15+ Years: With income: $5,000 to $7,499
+      T102_007:       Population 15+ Years: With income: $7,500 to $9,999
+      T102_008:       Population 15+ Years: With income: $10,000 to $12,499
+      T102_009:       Population 15+ Years: With income: $12,500 to $14,999
+      T102_010:       Population 15+ Years: With income: $15,000 to $17,499
+      T102_011:       Population 15+ Years: With income: $17,500 to $19,999
+      T102_012:       Population 15+ Years: With income: $20,000 to $22,499
+      T102_013:       Population 15+ Years: With income: $22,500 to $24,999
+      T102_014:       Population 15+ Years: With income: $25,000 to $29,999
+      T102_015:       Population 15+ Years: With income: $30,000 to $34,999
+      T102_016:       Population 15+ Years: With income: $35,000 to $39,999
+      T102_017:       Population 15+ Years: With income: $40,000 to $44,999
+      T102_018:       Population 15+ Years: With income: $45,000 to $49,999
+      T102_019:       Population 15+ Years: With income: $50,000 to $54,999
+      T102_020:       Population 15+ Years: With income: $55,000 to $64,999
+      T102_021:       Population 15+ Years: With income: $65,000 to $74,999
+      T102_022:       Population 15+ Years: With income: $75,000 to $99,999
+      T102_023:       Population 15+ Years: With income: $100,000 or more
+      T145_001:       Per capita income In 1999 Dollars
+      T146_001:       White Alone Population: Per capita income In 1999 Dollars
+      T147_001:       Black or African American Alone Population: Per capita income In 1999 Dollars
+      T153_001:       Hispanic or Latino Population: Per capita income In 1999 Dollars
+
+
+
+
+--------------------------------------------------------------------------------
+Citation and Use of Data
+--------------------------------------------------------------------------------
+ 
+All persons are granted a limited license to use this documentation and the
+accompanying data, subject to the following conditions:
+
+* Publications and research reports employing the data
+  must cite it appropriately. The citation should include the following:
+
+	  www.socialexplorer.com
+	  New York City, NY: Social Explorer 2015
+
+
+* Citations should also include the URL for this report:
+
+    http://www.socialexplorer.com/pub/reportdata/HtmlResults.aspx?reportid=R10950075
+
+If you have any questions contact info@socialexplorer.com
