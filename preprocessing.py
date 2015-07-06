@@ -142,6 +142,19 @@ def create_location_ethnic_prob(location_prob_df, return_ethnic_perc=False):
     else:
         return location_ethnic_prob
 
+
+def validate_input(lastname, cbg2000):
+    lastname_list = lastname
+    cbg2000_list = cbg2000
+    if isinstance(lastname, str):
+        lastname_list = [lastname]
+    if isinstance(cbg2000, str):
+        cbg2000_list = [cbg2000]
+    if len(cbg2000_list) != len(lastname_list):
+        raise Exception('Input lastname list and cbg2000 list should have same length')
+    return lastname_list, cbg2000_list
+
+
 if __name__ == '__main__':
     name = preprocess_surname('./data/surname_list/app_c.csv')
     print(name.iloc[:3])
