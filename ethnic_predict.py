@@ -44,6 +44,7 @@ if __name__ == '__main__':
     voter_file = pd.read_stata('./data/fl_voters_geo_covariates.dta', preserve_dtypes=False,
                                convert_categoricals=False, convert_dates=False)
     voter_file = preprocess_voter(voter_file)
+    print('Sample size %d' %len(voter_file))
     surname = voter_file['lastname']
     cbg2000 = voter_file['bctcb2000']
     predict = predict_ethnic(surname, cbg2000, name_prob, location_prob, location_ethnic_prob, ethnic_perc, False)
