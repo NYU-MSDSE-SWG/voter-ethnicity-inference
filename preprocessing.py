@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def preprocess_surname(file):
@@ -40,7 +41,8 @@ def read_census(file):
              'SE_T008_005','SE_T008_006','SE_T008_007','SE_T008_008','SE_T008_009','SE_T008_010','SE_T008_011',
              'SE_T008_012','SE_T008_013']]
     except:
-        raise Exception('Cannot open census csv file. Please download correct block group data. eg: http://old.socialexplorer.com/pub/reportdata/CsvResults.aspx?reportid=R10950075')
+        raise Exception('Cannot open census csv file. Please download correct block group data. eg: '
+                        'http://old.socialexplorer.com/pub/reportdata/CsvResults.aspx?reportid=R10950075')
 
     col_dict = {'SE_T015_001': 'total', 'SE_T015_003': 'white', 'SE_T015_004': 'black', 'SE_T015_005': 'indian_alaska',
                 'SE_T015_006': 'asian', 'SE_T015_007': 'hawaiian_islander', 'SE_T015_008': 'other', 'SE_T015_009': '2race',
@@ -56,7 +58,7 @@ def read_census(file):
     return census
 
 
-def create_cbg2000(census_df):
+def create_cbg2000(census_df, transform=True):
     """
     Create cbg2000 geocoding from borocode, tract and blkgrp in census data
     :param census_df: DataFrame, cleaned census data output by read_census()
@@ -65,23 +67,26 @@ def create_cbg2000(census_df):
     census = census_df
 
     # creating cbg2000 geocode
-    census['borocode'] = ''
-    census.loc[census['COUNTY'] == '047', 'borocode'] = '3'
-    census.loc[census['COUNTY'] == '081', 'borocode'] = '4'
-    census.loc[census['COUNTY'] == '061', 'borocode'] = '1'
-    census.loc[census['COUNTY'] == '005', 'borocode'] = '2'
-    census.loc[census['COUNTY'] == '085', 'borocode'] = '5'
-    census['cbg2000'] = ''
-    census.loc[:, 'cbg2000'] = census.loc[:, 'borocode'] + census.loc[:, 'TRACT'] + census.loc[:, 'BLKGRP']
+    if transform == True:
+        census['borocode'] = ''
+        census.loc[census['COUNTY'] == '047', 'borocode'] = '3'
+        census.loc[census['COUNTY'] == '081', 'borocode'] = '4'
+        census.loc[census['COUNTY'] == '061', 'borocode'] = '1'
+        census.loc[census['COUNTY'] == '005', 'borocode'] = '2'
+        census.loc[census['COUNTY'] == '085', 'borocode'] = '5'
+        census['cbg2000'] = ''
+        census.loc[:, 'cbg2000'] = census.loc[:, 'borocode'] + census.loc[:, 'TRACT'] + census.loc[:, 'BLKGRP']
 
-    census = census.drop('borocode',1)
+        census = census.drop('borocode',1)
+    else:
+        census.loc[:, 'cbg2000'] = census.loc[:, 'COUNTY'] + census.loc[:, 'TRACT'] + census.loc[:, 'BLKGRP']
 
     return census
 
 
-def preprocess_census(file):
+def preprocess_census(file, transform=True):
     census = read_census(file)
-    census = create_cbg2000(census)
+    census = create_cbg2000(census, transform)
 
 
     float_type_list = ['total','white','black','indian_alaska','asian','hawaiian_islander','other','2race','hispanic',
@@ -154,6 +159,23 @@ def validate_input(lastname, cbg2000):
         raise Exception('Input lastname list and cbg2000 list should have same length')
     return lastname_list, cbg2000_list
 
+
+def preprocess_voter(test):
+    id_use = ['voter_id','county','tract','blkgroup','lastname','firstname','gender','race','birth_date','_merge']
+    str_use = ['county','tract','blkgroup']
+    test = test[id_use]
+    test = test.dropna(axis=0)
+    test[str_use] = test[str_use].astype(int).astype(str)
+    test['county'] = test['county'].map(lambda x: x.rjust(3, '0'))
+    test['tract'] = test['tract'].map(lambda x: x.rjust(6, '0'))
+    test.loc[:,'bctcb2000'] = test.loc[:,'county'] + test.loc[:,'tract'] + test.loc[:,'blkgroup']
+    test['lastname'] = test['lastname'].map(lambda x: x.upper())
+    name_prob = preprocess_surname('./data/surname_list/app_c.csv')
+    intlastname = np.in1d(test['lastname'], name_prob.index)
+    test = test[intlastname]
+    test = test[test['race'] != 6]
+    test = test[test['race'] != 9]
+    return test
 
 if __name__ == '__main__':
     name = preprocess_surname('./data/surname_list/app_c.csv')
