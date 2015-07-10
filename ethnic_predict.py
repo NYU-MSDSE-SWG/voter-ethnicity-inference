@@ -41,8 +41,11 @@ if __name__ == '__main__':
     census = preprocess_census('./data/Census2000_BG/C2000_FL.csv', transform=False)
     location_prob = create_location_prob(census)
     location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(location_prob, True)
+    print('READ VOTER FILE')
     voter_file = pd.read_stata('./data/fl_voters_geo_covariates.dta', preserve_dtypes=False,
                                convert_categoricals=False, convert_dates=False)
+    print('READ OK')
+    voter_file = voter_file.iloc[:1000]
     voter_file = preprocess_voter(voter_file)
     print('Sample size %d' %len(voter_file))
     surname = voter_file['lastname']
