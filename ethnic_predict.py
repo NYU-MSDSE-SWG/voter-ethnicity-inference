@@ -1,6 +1,6 @@
 from preprocessing import *
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
-
+import random
 
 def transform_output(x):
     if x == 'white':
@@ -21,13 +21,16 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_prob, location_ethnic_
     lastname, cbg2000 = validate_input(lastname, cbg2000)
     name_p = name_prob.loc[lastname][['white','black','api','aian','2race','hispanic']]
     location_ethnic_p = location_ethnic_prob.loc[cbg2000][['white','black','api','aian','2race','hispanic']]
-    location_p = location_prob.loc[cbg2000][['white','black','api','aian','2race','hispanic']]
-    location_perc = location_prob.loc[cbg2000]['perc']
+    #location_p = location_prob.loc[cbg2000][['white','black','api','aian','2race','hispanic']]
+    #location_perc = location_prob.loc[cbg2000]['perc']
     ethnic_pred_prob = []
     ethnic_pred_race = []
     for i in range(len(lastname)):
-        ans = (location_perc.iloc[i] * location_p.iloc[i] / ethnic_perc * name_p.iloc[i] /
-                                 (name_p.iloc[i] * location_ethnic_p.iloc[i]).sum()).fillna(0)
+        numerator = location_ethnic_p.iloc[i] * name_p.iloc[i]
+        denominator = (location_ethnic_p.iloc[i] * name_p.iloc[i]).sum()
+        ans = (numerator / denominator).fillna(0)
+        #ans = (location_ethnic_p.iloc[i] * location_p.iloc[i] / ethnic_perc * name_p.iloc[i] /
+        #                         (name_p.iloc[i] * location_ethnic_p.iloc[i]).sum()).fillna(0)
         ethnic_pred_prob.append(ans)
         ethnic_pred_race.append(ans.argmax())
     if verbose_prob:
@@ -41,17 +44,28 @@ if __name__ == '__main__':
     census = preprocess_census('./data/Census2000_BG/C2000_FL.csv', transform=False)
     location_prob = create_location_prob(census)
     location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(location_prob, True)
-    print('READ VOTER FILE')
-    voter_file = pd.read_stata('./data/fl_voters_geo_covariates.dta', preserve_dtypes=False,
-                               convert_categoricals=False, convert_dates=False)
-    print('READ OK')
-    voter_file = voter_file.iloc[:10000]
-    voter_file = preprocess_voter(voter_file)
+    if True:
+        print('READ VOTER FILE')
+        voter_file = pd.read_csv('./data/test_input.csv', dtype=object)
+        rows = random.sample(voter_file.index, 1000)
+        voter_file = voter_file.ix[rows]
+        voter_file['race'] = (voter_file['race'].astype(float)).astype(int)
+        print('READ OK')
+    else:
+        print('READ VOTER FILE')
+        voter_file = pd.read_stata('./data/fl_voters_geo_covariates.dta', preserve_dtypes=False,
+                                   convert_categoricals=False, convert_dates=False)
+        print('READ OK')
+        voter_file = voter_file.iloc[:10000]
+        voter_file = preprocess_voter(voter_file)
+
     print('Sample size %d' %len(voter_file))
     surname = voter_file['lastname']
     cbg2000 = voter_file['bctcb2000']
     predict = predict_ethnic(surname, cbg2000, name_prob, location_prob, location_ethnic_prob, ethnic_perc, False)
     predict = pd.Series(predict).apply(transform_output)
+    predict.to_pickle('./out.pkl')
     print(accuracy_score(predict, voter_file['race']))
+    print(np.sum(predict == voter_file['race'])/float(len(predict)))
     print(classification_report(predict, voter_file['race']))
     print(confusion_matrix(predict, voter_file['race']))

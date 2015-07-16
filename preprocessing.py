@@ -26,23 +26,27 @@ def preprocess_surname(file):
     name_prob.columns = ['name', 'perc', 'white', 'black', 'api', 'aian', '2race', 'hispanic']
     race_list = ['white', 'black', 'api', 'aian', '2race', 'hispanic']
     for race in race_list:
-        name_prob[race] = name_prob[race] / 100
-    name_prob['perc'] = name_prob['perc'] / 100000
+        name_prob[race] = name_prob[race] / float(100)
+    name_prob['perc'] = name_prob['perc'] / float(100000)
     name_prob.index = name_prob['name']
     name = name_prob.drop('name', 1)
     return name
 
 
-def read_census(file):
+def read_census(file, census_type='group'):
     try:
-        census = pd.read_csv(file, dtype=object)
-        census = census[['SE_T015_001','SE_T015_003','SE_T015_004','SE_T015_005','SE_T015_006','SE_T015_007','SE_T015_008',
-             'SE_T015_009','SE_T015_010','Geo_TRACT','Geo_BLKGRP','Geo_COUNTY','SE_T008_002','SE_T008_003','SE_T008_004',
-             'SE_T008_005','SE_T008_006','SE_T008_007','SE_T008_008','SE_T008_009','SE_T008_010','SE_T008_011',
-             'SE_T008_012','SE_T008_013']]
+        if census_type == 'group':
+            census = pd.read_csv(file, dtype=object)
+            census = census[['SE_T015_001','SE_T015_003','SE_T015_004','SE_T015_005','SE_T015_006','SE_T015_007','SE_T015_008',
+                 'SE_T015_009','SE_T015_010','Geo_TRACT','Geo_BLKGRP','Geo_COUNTY','SE_T008_002','SE_T008_003','SE_T008_004',
+                 'SE_T008_005','SE_T008_006','SE_T008_007','SE_T008_008','SE_T008_009','SE_T008_010','SE_T008_011',
+                 'SE_T008_012','SE_T008_013']]
+        elif census_type == 'block':
+            census = pd.read_csv(file, dtype=object)
+            return census
     except:
-        raise Exception('Cannot open census csv file. Please download correct block group data. eg: '
-                        'http://old.socialexplorer.com/pub/reportdata/CsvResults.aspx?reportid=R10950075')
+            raise Exception('Cannot open census csv file. Please download correct block group data. eg: '
+                            'http://old.socialexplorer.com/pub/reportdata/CsvResults.aspx?reportid=R10950075')
 
     col_dict = {'SE_T015_001': 'total', 'SE_T015_003': 'white', 'SE_T015_004': 'black', 'SE_T015_005': 'indian_alaska',
                 'SE_T015_006': 'asian', 'SE_T015_007': 'hawaiian_islander', 'SE_T015_008': 'other', 'SE_T015_009': '2race',
@@ -86,30 +90,42 @@ def create_cbg2000(census_df, transform=True):
 
 def preprocess_census(file, transform=True):
     census = read_census(file)
-    census = create_cbg2000(census, transform)
+    if census.columns[0] == 'total':
+        # For block group data
+        census = create_cbg2000(census, transform)
 
 
-    float_type_list = ['total','white','black','indian_alaska','asian','hawaiian_islander','other','2race','hispanic',
-                       'y5','y9','y14','y17','y24','y34','y44','y54','y64','y74','y84','y85o']
-    census[float_type_list] = census[float_type_list].astype(float)
+        float_type_list = ['total','white','black','indian_alaska','asian','hawaiian_islander','other','2race','hispanic',
+                           'y5','y9','y14','y17','y24','y34','y44','y54','y64','y74','y84','y85o']
+        census[float_type_list] = census[float_type_list].astype(float)
 
-    # combining asian and hawaiian islander to be asian and pacific islander (aian)
-    census.loc[:,'asian'] = census.loc[:,'asian'] + census.loc[:,'hawaiian_islander']
+        # combining asian and hawaiian islander to be asian and pacific islander (aian)
+        census.loc[:,'asian'] = census.loc[:,'asian'] + census.loc[:,'hawaiian_islander']
 
-    census = census.drop('hawaiian_islander',1)
-    census = census.drop('other',1)
-    census = census.drop(['TRACT','BLKGRP','COUNTY'],1)
-    census.rename(columns={'indian_alaska': 'aian','asian':'api'}, inplace=True)
+        census = census.drop('hawaiian_islander',1)
+        census = census.drop('other',1)
+        census = census.drop(['TRACT','BLKGRP','COUNTY'],1)
+        census.rename(columns={'indian_alaska': 'aian','asian':'api'}, inplace=True)
 
-    # normalize count to percentage
-    normalize_list = ['white','black','aian','api','2race','hispanic',
-                       'y5','y9','y14','y17','y24','y34','y44','y54','y64','y74','y84','y85o']
-    for col in normalize_list:
-        census[col] = census[col]/census['total']
-    census['perc'] = census['total']/census['total'].sum()
-    census.index = census['cbg2000']
-    census = census.drop('cbg2000', 1)
-    return census
+        # normalize count to percentage
+        normalize_list = ['white','black','aian','api','2race','hispanic',
+                           'y5','y9','y14','y17','y24','y34','y44','y54','y64','y74','y84','y85o']
+        for col in normalize_list:
+            census[col] = census[col]/census['total']
+        census['perc'] = census['total']/census['total'].sum()
+        census.index = census['cbg2000']
+        census = census.drop('cbg2000', 1)
+        return census
+    #else:
+    #    census_loc = pd.Serie(['COUNTYA','CTY_SUBA','PLACEA','TRACTA','BLCK_GRPA','BLOCKA'])
+    #    census_white = pd.Series(range(1, 47)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
+    #    census_black = pd.Series(range(47, 93)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
+    #    census_aian = pd.Series(range(93, 139)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
+    #    census_asia = pd.Series(range(139, 185)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
+    #    census_pi = pd.Series(range(185, 231)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
+    #    census_other = pd.Series(range(231, 277)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
+    #    census_2race = pd.Series(range(277, 323)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
+
 
 
 def create_location_prob(cleaned_census_df):
@@ -176,6 +192,7 @@ def preprocess_voter(test):
     test = test[test['race'] != 6]
     test = test[test['race'] != 9]
     return test
+
 
 if __name__ == '__main__':
     name = preprocess_surname('./data/surname_list/app_c.csv')
