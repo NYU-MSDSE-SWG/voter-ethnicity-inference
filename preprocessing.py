@@ -24,10 +24,15 @@ def preprocess_surname(file):
     name_prob = name_prob.convert_objects(convert_numeric=True)
     name_prob = name_prob[[u'name', u'prop100k', u'pctwhite', u'pctblack', u'pctapi', u'pctaian', u'pct2prace', u'pcthispanic']]
     name_prob.columns = ['name', 'perc', 'white', 'black', 'api', 'aian', '2race', 'hispanic']
-    race_list = ['white', 'black', 'api', 'aian', '2race', 'hispanic']
+    name_prob['other'] = 0
+    other_list = ['aian', '2race']
+    for other_race in other_list:
+        name_prob.loc[:, 'other'] = name_prob.loc[:, 'other'] + name_prob.loc[:, other_race]
+    race_list = ['white', 'black', 'api', 'other', 'hispanic']
     for race in race_list:
         name_prob[race] = name_prob[race] / float(100)
     name_prob['perc'] = name_prob['perc'] / float(100000)
+    name_prob.rename(columns={'api': 'asian'}, inplace=True)
     name_prob.index = name_prob['name']
     name = name_prob.drop('name', 1)
     return name
@@ -101,14 +106,16 @@ def preprocess_census(file, transform=True):
 
         # combining asian and hawaiian islander to be asian and pacific islander (aian)
         census.loc[:,'asian'] = census.loc[:,'asian'] + census.loc[:,'hawaiian_islander']
+        other_list = ['hawaiian_islander', 'indian_alaska', '2race']
+        for other_race in other_list:
+            census.loc[:, 'other'] = census.loc[:, 'other'] + census.loc[:, other_race]
 
-        census = census.drop('hawaiian_islander',1)
-        census = census.drop('other',1)
+        census = census.drop(other_list ,1)
         census = census.drop(['TRACT','BLKGRP','COUNTY'],1)
-        census.rename(columns={'indian_alaska': 'aian','asian':'api'}, inplace=True)
+        #census.rename(columns={'indian_alaska': 'aian','asian':'api'}, inplace=True)
 
         # normalize count to percentage
-        normalize_list = ['white','black','aian','api','2race','hispanic',
+        normalize_list = ['white','black','asian','other','hispanic',
                            'y5','y9','y14','y17','y24','y34','y44','y54','y64','y74','y84','y85o']
         for col in normalize_list:
             census[col] = census[col]/census['total']
@@ -131,7 +138,7 @@ def preprocess_census(file, transform=True):
 def create_location_prob(cleaned_census_df):
     census = cleaned_census_df
     # create a dataframe containing ethnicity probability conditioned on block location
-    location_prob = census[['total','white','black','api','aian','2race','hispanic','perc']]
+    location_prob = census[['total','white','black','asian','other','hispanic','perc']]
     return location_prob
 
 
@@ -152,7 +159,7 @@ def create_location_ethnic_prob(location_prob_df, return_ethnic_perc=False):
     location_prob = location_prob_df
     location_ethnic_prob = location_prob.copy()
 
-    ethnic_list = ['white','black','api','aian','2race','hispanic']
+    ethnic_list = ['white','black','asian','other','hispanic']
     ethnic_perc = dict()
     for ethnic in ethnic_list:
         ethnic_perc[ethnic] = (location_prob[ethnic] * location_prob['perc']).sum()
@@ -189,8 +196,9 @@ def preprocess_voter(test):
     name_prob = preprocess_surname('./data/surname_list/app_c.csv')
     intlastname = np.in1d(test['lastname'], name_prob.index)
     test = test[intlastname]
-    test = test[test['race'] != 6]
-    test = test[test['race'] != 9]
+    test.loc[test['race'] == 7, 'race'] = 6
+    test.loc[test['race'] == 1, 'race'] = 6
+    test.loc[test['race'] == 9, 'race'] = 6
     return test
 
 

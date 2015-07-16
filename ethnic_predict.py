@@ -7,20 +7,18 @@ def transform_output(x):
         return 5
     elif x == 'black':
         return 3
-    elif x == 'aian':
-        return 1
-    elif x == 'api':
+    elif x == 'asian':
         return 2
     elif x == 'hispanic':
         return 4
-    elif x == '2race':
-        return 7
+    elif x == 'other':
+        return 6
 
 
 def predict_ethnic(lastname, cbg2000, name_prob, location_prob, location_ethnic_prob, ethnic_perc, verbose_prob = False):
     lastname, cbg2000 = validate_input(lastname, cbg2000)
-    name_p = name_prob.loc[lastname][['white','black','api','aian','2race','hispanic']]
-    location_ethnic_p = location_ethnic_prob.loc[cbg2000][['white','black','api','aian','2race','hispanic']]
+    name_p = name_prob.loc[lastname][['white','black','asian','other','hispanic']]
+    location_ethnic_p = location_ethnic_prob.loc[cbg2000][['white','black','asian','other','hispanic']]
     #location_p = location_prob.loc[cbg2000][['white','black','api','aian','2race','hispanic']]
     #location_perc = location_prob.loc[cbg2000]['perc']
     ethnic_pred_prob = []
