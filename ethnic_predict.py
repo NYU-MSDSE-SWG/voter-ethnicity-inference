@@ -45,7 +45,7 @@ if __name__ == '__main__':
     voter_file = pd.read_stata('./data/fl_voters_geo_covariates.dta', preserve_dtypes=False,
                                convert_categoricals=False, convert_dates=False)
     print('READ OK')
-    voter_file = voter_file.iloc[:1000]
+    voter_file = voter_file.iloc[:10000]
     voter_file = preprocess_voter(voter_file)
     print('Sample size %d' %len(voter_file))
     surname = voter_file['lastname']
