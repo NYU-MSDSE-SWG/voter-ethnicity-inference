@@ -133,7 +133,7 @@ def preprocess_census(file, transform=True, census='group'):
         # islander (aian)
         census.loc[:, 'asian'] = census.loc[
             :, 'asian'] + census.loc[:, 'hawaiian_islander']
-        other_list = ['hawaiian_islander', 'indian_alaska', '2race']
+        other_list = ['indian_alaska', '2race']
         for other_race in other_list:
             census.loc[:, 'other'] = census.loc[
                 :, 'other'] + census.loc[:, other_race]
@@ -163,7 +163,7 @@ def preprocess_census(file, transform=True, census='group'):
         census.rename(columns=col_dict, inplace=True)
         census.loc[:, 'asian'] = census.loc[
             :, 'asian'] + census.loc[:, 'hawaiian_islander']
-        other_list = ['hawaiian_islander', 'indian_alaska']
+        other_list = ['indian_alaska']
         for other_race in other_list:
             census.loc[:, 'other'] = census.loc[
                 :, 'other'] + census.loc[:, other_race]
@@ -250,9 +250,9 @@ def preprocess_voter(test, type='group'):
     elif type == 'block':
         id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
                   'firstname', 'gender', 'race', 'birth_date']
-        test.race = test.race.astype(float).astype(int)
         test = test[id_use]
         test = test.dropna(axis=0)
+        test.race = test.race.astype(float).astype(int)
         test.loc[:, 'lastname'] = test.lastname.apply(lambda x: x.upper())
         name_prob = preprocess_surname('./data/surname_list/app_c.csv')
         intlastname = np.in1d(test['lastname'], name_prob.index)
