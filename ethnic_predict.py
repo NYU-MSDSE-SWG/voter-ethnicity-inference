@@ -55,14 +55,15 @@ def main():
         rows = random.sample(voter_file.index, 1000)
         voter_file = voter_file.ix[rows]
         voter_file['race'] = (voter_file['race'].astype(float)).astype(int)
-        voter_file.race = voter_file.race.map({7: 6, 1: 6, 9: 6})
+        voter_file.race = voter_file.race.replace({7: 6, 1: 6, 9: 6})
         print('READ OK')
     else:
         print('READ VOTER FILE')
-        voter_file = pd.read_stata('./data/FL1_voters_geo_covariates.dta', preserve_dtypes=False,
-                                   convert_categoricals=False, convert_dates=False)
+        voter_file = pd.read_csv('./data/FL1_voters_geo_covariates.csv', dtype=object)
+        #voter_file = pd.read_stata('./data/FL1_voters_geo_covariates.dta', preserve_dtypes=False,
+        #                           convert_categoricals=False, convert_dates=False)
         print('READ OK')
-        rows = random.sample(voter_file.index, 1000)
+        rows = random.sample(voter_file.index, 10000)
         voter_file = voter_file.ix[rows]
         voter_file = preprocess_voter(voter_file, type='block')
 

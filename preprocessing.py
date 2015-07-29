@@ -43,6 +43,13 @@ def preprocess_surname(file):
 
 
 def read_census(file, census_type='group'):
+    """
+    This function read census file, and extract ethnicty information for
+    census block level dataset
+    :param file: string, dataset file location
+    :param census_type: string, specify what level census data is provided
+    :return: DataFrame
+    """
     try:
         if census_type == 'group':
             census = pd.read_csv(file, dtype=object)
@@ -222,7 +229,7 @@ def validate_input(lastname, cbg2000):
     return lastname_list, cbg2000_list
 
 
-def preprocess_voter(test, type = 'group'):
+def preprocess_voter(test, type='group'):
     if type == 'group':
         id_use = ['voter_id', 'county', 'tract', 'blkgroup', 'lastname',
                   'firstname', 'gender', 'race', 'birth_date', '_merge']
@@ -238,17 +245,18 @@ def preprocess_voter(test, type = 'group'):
         name_prob = preprocess_surname('./data/surname_list/app_c.csv')
         intlastname = np.in1d(test['lastname'], name_prob.index)
         test = test[intlastname]
-        test.race = test.race.map({7: 6, 1: 6, 9: 6})
+        test.race = test.race.replace({7: 6, 1: 6, 9: 6})
         return test
     elif type == 'block':
         id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
                   'firstname', 'gender', 'race', 'birth_date']
+        test.race = test.race.astype(float).astype(int)
         test = test[id_use]
         test = test.dropna(axis=0)
         test.loc[:, 'lastname'] = test.lastname.apply(lambda x: x.upper())
         name_prob = preprocess_surname('./data/surname_list/app_c.csv')
         intlastname = np.in1d(test['lastname'], name_prob.index)
-        test.race = test.race.map({7: 6, 1: 6, 9: 6})
+        test.race = test.race.replace({7: 6, 1: 6, 9: 6})
         return test
 
 if __name__ == '__main__':
