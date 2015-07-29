@@ -64,7 +64,7 @@ def main():
         print('READ OK')
         rows = random.sample(voter_file.index, 1000)
         voter_file = voter_file.ix[rows]
-        voter_file = preprocess_voter(voter_file)
+        voter_file = preprocess_voter(voter_file, type='block')
 
     print('Sample size %d' % len(voter_file))
     surname = voter_file['lastname']
