@@ -110,8 +110,8 @@ def create_cbg2000(census_df, transform=True):
     return census
 
 
-def preprocess_census(file, transform=True):
-    census = read_census(file)
+def preprocess_census(file, transform=True, census='group'):
+    census = read_census(file, census_type=census)
     if census.columns[0] == 'total':
         # For block group data
         census = create_cbg2000(census, transform)
@@ -145,16 +145,27 @@ def preprocess_census(file, transform=True):
         census.index = census['cbg2000']
         census = census.drop('cbg2000', 1)
         return census
-    # else:
-    #    census_loc = pd.Serie(['COUNTYA','CTY_SUBA','PLACEA','TRACTA','BLCK_GRPA','BLOCKA'])
-    #    census_white = pd.Series(range(1, 47)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
-    #    census_black = pd.Series(range(47, 93)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
-    #    census_aian = pd.Series(range(93, 139)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
-    #    census_asia = pd.Series(range(139, 185)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
-    #    census_pi = pd.Series(range(185, 231)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
-    #    census_other = pd.Series(range(231, 277)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
-    #    census_2race = pd.Series(range(277, 323)).map(lambda x: 'FYO'+ str(x).rjust(3, '0'))
-
+    else:
+        census = census[['GISJOIN', 'FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']]
+        census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']] = \
+            census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']].astype(float)
+        census['total'] = census.sum(axis=1)
+        col_dict = {'FX1001': 'white', 'FX1002': 'black', 'FX1003': 'indian_alaska',
+                    'FX1004': 'asian', 'FX1005': 'hawaiian_islander', 'FX1006': 'other',
+                    'FXZ001': 'hispanic'}
+        census.rename(columns=col_dict, inplace=True)
+        census.loc[:, 'asian'] = census.loc[
+            :, 'asian'] + census.loc[:, 'hawaiian_islander']
+        other_list = ['hawaiian_islander', 'indian_alaska']
+        for other_race in other_list:
+            census.loc[:, 'other'] = census.loc[
+                :, 'other'] + census.loc[:, other_race]
+        normalize_list = ['white', 'black', 'asian', 'other', 'hispanic']
+        for col in normalize_list:
+            census[col] = census[col] / census['total']
+        census['perc'] = census['total'] / census['total'].sum()
+        census.index = census['GISJOIN']
+        return census
 
 def create_location_prob(cleaned_census_df):
     census = cleaned_census_df
@@ -211,26 +222,34 @@ def validate_input(lastname, cbg2000):
     return lastname_list, cbg2000_list
 
 
-def preprocess_voter(test):
-    id_use = ['voter_id', 'county', 'tract', 'blkgroup', 'lastname',
-              'firstname', 'gender', 'race', 'birth_date', '_merge']
-    str_use = ['county', 'tract', 'blkgroup']
-    test = test[id_use]
-    test = test.dropna(axis=0)
-    test[str_use] = test[str_use].astype(int).astype(str)
-    test['county'] = test['county'].map(lambda x: x.rjust(3, '0'))
-    test['tract'] = test['tract'].map(lambda x: x.rjust(6, '0'))
-    test.loc[:, 'bctcb2000'] = test.loc[:, 'county'] + \
-        test.loc[:, 'tract'] + test.loc[:, 'blkgroup']
-    test['lastname'] = test['lastname'].map(lambda x: x.upper())
-    name_prob = preprocess_surname('./data/surname_list/app_c.csv')
-    intlastname = np.in1d(test['lastname'], name_prob.index)
-    test = test[intlastname]
-    test.loc[test['race'] == 7, 'race'] = 6
-    test.loc[test['race'] == 1, 'race'] = 6
-    test.loc[test['race'] == 9, 'race'] = 6
-    return test
-
+def preprocess_voter(test, type = 'group'):
+    if type == 'group':
+        id_use = ['voter_id', 'county', 'tract', 'blkgroup', 'lastname',
+                  'firstname', 'gender', 'race', 'birth_date', '_merge']
+        str_use = ['county', 'tract', 'blkgroup']
+        test = test[id_use]
+        test = test.dropna(axis=0)
+        test[str_use] = test[str_use].astype(int).astype(str)
+        test['county'] = test['county'].map(lambda x: x.rjust(3, '0'))
+        test['tract'] = test['tract'].map(lambda x: x.rjust(6, '0'))
+        test.loc[:, 'bctcb2000'] = test.loc[:, 'county'] + \
+            test.loc[:, 'tract'] + test.loc[:, 'blkgroup']
+        test['lastname'] = test['lastname'].map(lambda x: x.upper())
+        name_prob = preprocess_surname('./data/surname_list/app_c.csv')
+        intlastname = np.in1d(test['lastname'], name_prob.index)
+        test = test[intlastname]
+        test.race = test.race.map({7: 6, 1: 6, 9: 6})
+        return test
+    elif type == 'block':
+        id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
+                  'firstname', 'gender', 'race', 'birth_date']
+        test = test[id_use]
+        test = test.dropna(axis=0)
+        test.loc[:, 'lastname'] = test.lastname.apply(lambda x: x.upper())
+        name_prob = preprocess_surname('./data/surname_list/app_c.csv')
+        intlastname = np.in1d(test['lastname'], name_prob.index)
+        test.race = test.race.map({7: 6, 1: 6, 9: 6})
+        return test
 
 if __name__ == '__main__':
     name = preprocess_surname('./data/surname_list/app_c.csv')

@@ -45,35 +45,34 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
 def main():
     name_prob = preprocess_surname('./data/surname_list/app_c.csv')
     census = preprocess_census(
-        './data/Census2000_BG/C2000_FL.csv', transform=False)
+        './data/Census2000_BG/nhgis0061_ds147_2000_block.csv', transform=False, census='block')
     location_prob = create_location_prob(census)
     location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(
         location_prob, True)
-    if True:
+    if False:
         print('READ VOTER FILE')
         voter_file = pd.read_csv('./data/test_input.csv', dtype=object)
         rows = random.sample(voter_file.index, 1000)
         voter_file = voter_file.ix[rows]
         voter_file['race'] = (voter_file['race'].astype(float)).astype(int)
-        voter_file.loc[voter_file['race'] == 7, 'race'] = 6
-        voter_file.loc[voter_file['race'] == 1, 'race'] = 6
-        voter_file.loc[voter_file['race'] == 9, 'race'] = 6
+        voter_file.race = voter_file.race.map({7: 6, 1: 6, 9: 6})
         print('READ OK')
     else:
         print('READ VOTER FILE')
-        voter_file = pd.read_stata('./data/fl_voters_geo_covariates.dta', preserve_dtypes=False,
+        voter_file = pd.read_stata('./data/FL1_voters_geo_covariates.dta', preserve_dtypes=False,
                                    convert_categoricals=False, convert_dates=False)
         print('READ OK')
-        voter_file = voter_file.iloc[:10000]
+        rows = random.sample(voter_file.index, 1000)
+        voter_file = voter_file.ix[rows]
         voter_file = preprocess_voter(voter_file)
 
     print('Sample size %d' % len(voter_file))
     surname = voter_file['lastname']
-    cbg2000 = voter_file['bctcb2000']
+    cbg2000 = voter_file['gisjoin00']
     predict = predict_ethnic(
         surname, cbg2000, name_prob, location_ethnic_prob, False)
     predict = pd.Series(predict).apply(transform_output)
-    predict.to_pickle('./out.pkl')
+    predict.to_pickle('./out_blk.pkl')
     print(accuracy_score(predict, voter_file['race']))
     print(np.sum(predict == voter_file['race']) / float(len(predict)))
     print(classification_report(predict, voter_file['race']))
