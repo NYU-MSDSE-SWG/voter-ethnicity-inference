@@ -32,7 +32,7 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
     ethnic_pred_race = []
     for i in range(len(lastname)):
         numerator = location_ethnic_p.iloc[i] * name_p.iloc[i]
-        denominator = (location_ethnic_p.iloc[i] * name_p.iloc[i]).sum()
+        denominator = numerator.sum()
         ans = (numerator / denominator).fillna(0)
         ethnic_pred_prob.append(ans)
         ethnic_pred_race.append(ans.argmax())
@@ -52,7 +52,7 @@ def main():
     if False:
         print('READ VOTER FILE')
         voter_file = pd.read_csv('./data/test_input.csv', dtype=object)
-        rows = random.sample(voter_file.index, 1000)
+        rows = random.sample(voter_file.index, 100000)
         voter_file = voter_file.ix[rows]
         voter_file['race'] = (voter_file['race'].astype(float)).astype(int)
         voter_file.race = voter_file.race.replace({7: 6, 1: 6, 9: 6})

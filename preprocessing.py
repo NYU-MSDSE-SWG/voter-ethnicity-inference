@@ -241,23 +241,20 @@ def preprocess_voter(test, type='group'):
         test['tract'] = test['tract'].map(lambda x: x.rjust(6, '0'))
         test.loc[:, 'bctcb2000'] = test.loc[:, 'county'] + \
             test.loc[:, 'tract'] + test.loc[:, 'blkgroup']
-        test['lastname'] = test['lastname'].map(lambda x: x.upper())
-        name_prob = preprocess_surname('./data/surname_list/app_c.csv')
-        intlastname = np.in1d(test['lastname'], name_prob.index)
-        test = test[intlastname]
-        test.race = test.race.replace({7: 6, 1: 6, 9: 6})
-        return test
     elif type == 'block':
         id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
                   'firstname', 'gender', 'race', 'birth_date']
         test = test[id_use]
         test = test.dropna(axis=0)
-        test.race = test.race.astype(float).astype(int)
-        test.loc[:, 'lastname'] = test.lastname.apply(lambda x: x.upper())
-        name_prob = preprocess_surname('./data/surname_list/app_c.csv')
-        intlastname = np.in1d(test['lastname'], name_prob.index)
-        test.race = test.race.replace({7: 6, 1: 6, 9: 6})
-        return test
+
+    test.race = test.race.astype(float).astype(int)
+    test['lastname'] = test['lastname'].map(lambda x: x.upper())
+    name_prob = preprocess_surname('./data/surname_list/app_c.csv')
+    intlastname = np.in1d(test['lastname'], name_prob.index)
+    test = test[intlastname]
+    test.race = test.race.replace({7: 6, 1: 6, 9: 6})
+    return test
+
 
 if __name__ == '__main__':
     name = preprocess_surname('./data/surname_list/app_c.csv')
