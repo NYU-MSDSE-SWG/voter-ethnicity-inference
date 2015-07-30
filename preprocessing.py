@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
+import random
 
 
-def preprocess_surname(file):
+def preprocess_surname(file_loc):
     """
     This function preprocess surname list csv file and return a Dataframe
     containing ethnicity probability conditioned on surname.
-    :param file: string
+    :param file_loc: string
     :return: DataFrame, having column=['name', 'perc', 'white', 'black', 'api',
     'aian', '2race', 'hispanic']
 
@@ -19,7 +20,7 @@ def preprocess_surname(file):
     'hispanic' : Percent Hispanic Origin
     """
     try:
-        name_prob = pd.read_csv(file)
+        name_prob = pd.read_csv(file_loc)
     except:
         raise Exception('Cannot open surname list csv file')
     name_prob = name_prob.convert_objects(convert_numeric=True)
@@ -42,17 +43,32 @@ def preprocess_surname(file):
     return name
 
 
-def read_census(file, census_type='group'):
+def read_census(file_loc, census_type='group'):
     """
-    This function read census file, and extract ethnicty information for
-    census block level dataset
+    This function read census file. If census data is block group level, it will extract
+    ethnicty information. If census data is block level, it will just read csv file as
+    DataFrame. This function is used in preprocess_census function.
     :param file: string, dataset file location
-    :param census_type: string, specify what level census data is provided
+    :param census_type: string, specify what level census data is provided ('group' or 'block')
     :return: DataFrame
+    For census block group data, it has column=['total', 'white', 'black', 'indian_alaska',
+    'asian', 'hawaiian_islander', 'other', '2ormore', 'hispanic', 'TRACT', 'BLKGRP', 'COUNTY',
+    'y5', 'y9', 'y14', 'y17', 'y24', 'y34', 'y44', 'y54', 'y64', 'y74', 'y84', 'y85o']]
+    'total': total number of people in this census block group
+    'white', 'black', 'indian_alaska', 'asian', 'hawaiian_islander', 'hispanic':
+        number of people in this ethnic in this census block group
+    '2ormore': number of people having two or more ethnicity
+    'other': number of people having other ethnicity not described above
+    'TRACT', 'BLKGRP', 'COUNTY': geographical code describing this census block group
+    'y5', 'y9', 'y14', 'y17', 'y24', 'y34', 'y44', 'y54', 'y64', 'y74', 'y84':
+        number of people within an interval of age in this census block group.
+        eg: 'y9' represents number of people from age 5 to age 9
+            'y14' represents number of people from age 10 to age 14
+    'y85o': number of people 85 years and over
     """
     try:
         if census_type == 'group':
-            census = pd.read_csv(file, dtype=object)
+            census = pd.read_csv(file_loc, dtype=object)
             census = census[['SE_T015_001', 'SE_T015_003', 'SE_T015_004',
                              'SE_T015_005', 'SE_T015_006', 'SE_T015_007',
                              'SE_T015_008', 'SE_T015_009', 'SE_T015_010',
@@ -62,13 +78,14 @@ def read_census(file, census_type='group'):
                              'SE_T008_008', 'SE_T008_009', 'SE_T008_010',
                              'SE_T008_011', 'SE_T008_012', 'SE_T008_013']]
         elif census_type == 'block':
-            census = pd.read_csv(file, dtype=object)
+            census = pd.read_csv(file_loc, dtype=object)
             return census
     except:
         raise Exception('Cannot open census csv file. Please download correct'
                         'block group data. eg: '
                         'http://old.socialexplorer.com/pub/reportdata/'
-                        'CsvResults.aspx?reportid=R10950075')
+                        'CsvResults.aspx?reportid=R10950075 '
+                        'or block data from NHGIS')
 
     col_dict = {'SE_T015_001': 'total', 'SE_T015_003': 'white', 'SE_T015_004':
                 'black', 'SE_T015_005': 'indian_alaska', 'SE_T015_006':
@@ -82,17 +99,16 @@ def read_census(file, census_type='group'):
                 'y74', 'SE_T008_012': 'y84', 'SE_T008_013': 'y85o'}
 
     census.rename(columns=col_dict, inplace=True)
-    #census.columns = ['total', 'white', 'black', 'indian_alaska', 'asian',
-    #                  'hawaiian_islander', 'other', '2ormore', 'hispanic',
-    #                  'TRACT', 'BLKGRP', 'COUNTY', 'y5', 'y9', 'y14', 'y17',
-    #                  'y24', 'y34', 'y44', 'y54', 'y64', 'y74', 'y84', 'y85o']
     return census
 
 
-def create_cbg2000(census_df, transform=True):
+def create_cbg2000(census_df, transform=False):
     """
-    Create cbg2000 geocoding from borocode, tract and blkgrp in census data
+    Create cbg2000 geocoding from borocode, tract and blkgrp in census block
+    group data.
     :param census_df: DataFrame, cleaned census data output by read_census()
+           transform: Boolean, transform=True when NY's census block group data
+           and voter's file is used, else transform=False
     :return: DataFrame, having a new column called 'cbg2000'
     """
     census = census_df
@@ -117,10 +133,24 @@ def create_cbg2000(census_df, transform=True):
     return census
 
 
-def preprocess_census(file, transform=True, census='group'):
-    census = read_census(file, census_type=census)
-    if census.columns[0] == 'total':
-        # For block group data
+def preprocess_census(file_loc, transform=False, census_type='group'):
+    """
+    Preprocess census data. It combines ethnicity information to percentage
+    of people in white, black, asian, hispanic and other. It also gives
+    percentage of people in different age range described in read_census().
+    :param file_loc: string, location of census data
+    :param transform: Boolean, transform=True when NY's census block group data
+           and voter's file is used, else transform=False
+    :param census_type: string, specify what level census data is provided
+           ('group' or 'block')
+    :return: DataFrame, having column=['white', 'black', 'asian', 'other',
+             'hispanic', 'y5', 'y9', 'y14', 'y17', 'y24', 'y34', 'y44', 'y54',
+             'y64', 'y74', 'y84', 'y85o', 'total'].
+             Index is location geocode.
+    """
+    census = read_census(file_loc, census_type=census_type)
+    if census_type == 'group':
+        # For census block group data
         census = create_cbg2000(census, transform)
 
         float_type_list = ['total', 'white', 'black', 'indian_alaska', 'asian',
@@ -133,6 +163,8 @@ def preprocess_census(file, transform=True, census='group'):
         # islander (aian)
         census.loc[:, 'asian'] = census.loc[
             :, 'asian'] + census.loc[:, 'hawaiian_islander']
+
+        # combining indian_alaska and two more races to be other
         other_list = ['indian_alaska', '2race']
         for other_race in other_list:
             census.loc[:, 'other'] = census.loc[
@@ -140,7 +172,6 @@ def preprocess_census(file, transform=True, census='group'):
 
         census = census.drop(other_list, 1)
         census = census.drop(['TRACT', 'BLKGRP', 'COUNTY'], 1)
-        #census.rename(columns={'indian_alaska': 'aian','asian':'api'}, inplace=True)
 
         # normalize count to percentage
         normalize_list = ['white', 'black', 'asian', 'other', 'hispanic', 'y5',
@@ -152,7 +183,8 @@ def preprocess_census(file, transform=True, census='group'):
         census.index = census['cbg2000']
         census = census.drop('cbg2000', 1)
         return census
-    else:
+
+    elif census_type == 'block':
         census = census[['GISJOIN', 'FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']]
         census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']] = \
             census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']].astype(float)
@@ -174,7 +206,17 @@ def preprocess_census(file, transform=True, census='group'):
         census.index = census['GISJOIN']
         return census
 
+    else:
+        raise Exception('Undefined census type %s' %census_type)
+
 def create_location_prob(cleaned_census_df):
+    """
+    Extract ethnicity probability conditioned on location from cleaned census DataFrame
+    :param cleaned_census_df: DataFrame, output from preprocess_census()
+    :return: DataFrame, having column=['total', 'white', 'black', 'asian', 'other',
+            'hispanic', 'perc'].
+            Index is location geocode.
+    """
     census = cleaned_census_df
     # create a dataframe containing ethnicity probability conditioned on block
     # location
@@ -184,6 +226,12 @@ def create_location_prob(cleaned_census_df):
 
 
 def create_age_prob(cleaned_census_df):
+    """
+    Extract age probability conditioned on location from cleaned census DataFrame
+    :param cleaned_census_df: DataFrame, output from preprocess_census()
+    :return: DataFrame, having column=['total', 'y5', 'y9', 'y14', 'y17', 'y24',
+                       'y34', 'y44', 'y54', 'y64', 'y74', 'y84', 'y85o', 'perc']
+    """
     census = cleaned_census_df
     # create a dataframe containing age probability conditioned on block
     # location
@@ -192,23 +240,24 @@ def create_age_prob(cleaned_census_df):
     return age_prob
 
 
-def create_location_ethnic_prob(location_prob_df, return_ethnic_perc=False):
+def create_location_ethnic_prob(cleaned_census_df, return_ethnic_perc=False):
     """
-    Create a DataFrame containing block probability conditioned on ethnicity
-    :param location_prob_df: DataFrame, from output of create_location_prob()
+    Create a DataFrame containing location probability conditioned on ethnicity
+    P(location | ethnicity)
+    :param cleaned_census_df: DataFrame, from output of preprocess_census()
     :return location_ethnic_prob: DataFrame
             ethnic_perc: Series, containing percentage of each ethnicity
     """
-    location_prob = location_prob_df
+    location_prob = cleaned_census_df[['total', 'white', 'black', 'asian', 'other',
+                                       'hispanic', 'perc']]
     location_ethnic_prob = location_prob.copy()
 
     ethnic_list = ['white', 'black', 'asian', 'other', 'hispanic']
     ethnic_perc = dict()
     for ethnic in ethnic_list:
-        ethnic_perc[ethnic] = (
-            location_prob[ethnic] * location_prob['perc']).sum()
-        location_ethnic_prob.loc[:, ethnic] = location_prob.loc[
-            :, ethnic] * location_prob.loc[:, 'perc'] / ethnic_perc[ethnic]
+        temp = location_prob[ethnic] * location_prob['perc']
+        ethnic_perc[ethnic] = temp.sum()
+        location_ethnic_prob.loc[:, ethnic] = temp / ethnic_perc[ethnic]
     ethnic_perc = pd.Series(ethnic_perc)
     if return_ethnic_perc:
         return location_ethnic_prob, ethnic_perc
@@ -217,6 +266,13 @@ def create_location_ethnic_prob(location_prob_df, return_ethnic_perc=False):
 
 
 def validate_input(lastname, cbg2000):
+    """
+    Check whether lastname and cbg2000 have same length.
+    :param lastname: string or list
+    :param cbg2000: string or list
+    :return: lastname_list: list
+             cbg2000_list: list
+    """
     lastname_list = lastname
     cbg2000_list = cbg2000
     if isinstance(lastname, str):
@@ -229,8 +285,43 @@ def validate_input(lastname, cbg2000):
     return lastname_list, cbg2000_list
 
 
-def preprocess_voter(test, type='group'):
-    if type == 'group':
+def read_voter(file_loc):
+    """
+    Read voter's file and return a DataFrame
+    :param file_loc: string, location of voter's file
+    :return: DataFrame
+    """
+    if isinstance(file_loc, str):
+        file_type = file_loc.split('.')[-1]
+        if file_type == 'csv':
+            voter_file = pd.read_csv(file_loc, dtype=object)
+        elif file_type == 'dta':
+            voter_file = pd.read_stata(file_loc, preserve_dtypes=False,
+                                       convert_categoricals=False, convert_dates=False)
+        else:
+            raise Exception("Can not open voter's file, please input a csv or dta file")
+        return voter_file
+    else:
+        raise Exception("Please input string as file location")
+
+
+def preprocess_voter(file_loc, census_type='group', sample=0):
+    """
+    Preprocess voter's file. It will drop rows with na in ['voter_id', 'gisjoin10',
+    'gisjoin00', 'lastname', 'firstname', 'gender', 'race', 'birth_date']. If
+    type='group', it will also create geocode from county, tract and blkgroup to match
+    census block group file.
+    :param file_loc: string
+    :param type: string, 'group' or 'block'
+    :param sample:
+    :return:
+    """
+    test = read_voter(file_loc)
+    if sample > 0:
+        rows = random.sample(test.index, sample)
+        test = test.ix[rows]
+
+    if census_type == 'group':
         id_use = ['voter_id', 'county', 'tract', 'blkgroup', 'lastname',
                   'firstname', 'gender', 'race', 'birth_date', '_merge']
         str_use = ['county', 'tract', 'blkgroup']
@@ -241,17 +332,22 @@ def preprocess_voter(test, type='group'):
         test['tract'] = test['tract'].map(lambda x: x.rjust(6, '0'))
         test.loc[:, 'bctcb2000'] = test.loc[:, 'county'] + \
             test.loc[:, 'tract'] + test.loc[:, 'blkgroup']
-    elif type == 'block':
+    elif census_type == 'block':
         id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
                   'firstname', 'gender', 'race', 'birth_date']
         test = test[id_use]
         test = test.dropna(axis=0)
+    else:
+        raise Exception('Undefined type %s' % census_type)
 
+    # remove rows having lastname not in census name list
     test.race = test.race.astype(float).astype(int)
     test['lastname'] = test['lastname'].map(lambda x: x.upper())
     name_prob = preprocess_surname('./data/surname_list/app_c.csv')
     intlastname = np.in1d(test['lastname'], name_prob.index)
     test = test[intlastname]
+
+    # combine some ethnics to 'other'
     test.race = test.race.replace({7: 6, 1: 6, 9: 6})
     return test
 
@@ -259,7 +355,6 @@ def preprocess_voter(test, type='group'):
 if __name__ == '__main__':
     name = preprocess_surname('./data/surname_list/app_c.csv')
     print(name.iloc[:3])
-    census = preprocess_census('./data/Census2000_BG/C2000_NY.csv')
-    location_prob = create_location_prob(census)
-    location_ethnic_prob = create_location_ethnic_prob(location_prob)
+    census = preprocess_census('./data/Census2000_BG/C2000_NY.csv', transform=True, census_type='group')
+    location_ethnic_prob = create_location_ethnic_prob(census)
     print(location_ethnic_prob.iloc[:3])

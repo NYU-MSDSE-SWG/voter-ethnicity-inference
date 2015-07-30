@@ -6,10 +6,15 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 
 from preprocessing import (validate_input, preprocess_surname,
                            preprocess_census, preprocess_voter,
-                           create_location_prob, create_location_ethnic_prob)
+                           create_location_ethnic_prob)
 
 
 def transform_output(x):
+    """
+    Tranform predict_ethnic output from ethnicity name to code in order to match voter's file
+    :param x: string
+    :return: int
+    """
     if x == 'white':
         return 5
     elif x == 'black':
@@ -20,9 +25,22 @@ def transform_output(x):
         return 4
     elif x == 'other':
         return 6
+    else:
+        raise Exception('Undefined ethnic %s' % x)
 
 
 def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_prob=False):
+    """
+    Predicting ethnicity given surname(lastname), location code(cbg2000),
+    name probability(name_prob), location probability conditioned on ethnicity(location_ethnic_prob)
+    :param lastname: list, containing people's lastname
+    :param cbg2000: list, containing people's geolocation code
+    :param name_prob: DataFrame, output from preprocess_surname()
+    :param location_ethnic_prob: DataFrame, output from create_location_ethnic_prob()
+    :param verbose_prob: Boolean, if True, will return probability for predicted ethnic
+    :return: ethnic_pred_race: list, containing predicted ethnic
+             ethnic_pred_prob: list, containing probability of predicted ethnic
+    """
     lastname, cbg2000 = validate_input(lastname, cbg2000)
     name_p = name_prob.loc[lastname][
         ['white', 'black', 'asian', 'other', 'hispanic']]
@@ -43,30 +61,31 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
 
 
 def main():
+    """
+    Usage: 1. Use preprocess_surname() to get name_prob
+           2. Use preprocess_census() to get cleaned census
+           3. Use create_location_ethnic_prob() to get location_ethnic_prob
+              and ethnic_perc
+           4. Use preprocess_voter() to get cleaned voter's file
+           5. Specify the column containing surname and geolocation code.
+              eg, 'lastname' and 'gisjoin00'
+              Please note that geolocation code in voter's file should match
+              with census file.
+           6. Put all of data described above into predict_ethnic() to get
+              the predicted ethnic
+           7. Use metric to measure the performance if needed.
+    :return:
+    """
     name_prob = preprocess_surname('./data/surname_list/app_c.csv')
     census = preprocess_census(
-        './data/Census2000_BG/nhgis0061_ds147_2000_block.csv', transform=False, census='block')
-    location_prob = create_location_prob(census)
+        './data/Census2000_BG/nhgis0061_ds147_2000_block.csv',
+        transform=False, census_type='block')
     location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(
-        location_prob, True)
-    if False:
-        print('READ VOTER FILE')
-        voter_file = pd.read_csv('./data/test_input.csv', dtype=object)
-        rows = random.sample(voter_file.index, 100000)
-        voter_file = voter_file.ix[rows]
-        voter_file['race'] = (voter_file['race'].astype(float)).astype(int)
-        voter_file.race = voter_file.race.replace({7: 6, 1: 6, 9: 6})
-        print('READ OK')
-    else:
-        print('READ VOTER FILE')
-        voter_file = pd.read_csv('./data/FL1_voters_geo_covariates.csv', dtype=object)
-        #voter_file = pd.read_stata('./data/FL1_voters_geo_covariates.dta', preserve_dtypes=False,
-        #                           convert_categoricals=False, convert_dates=False)
-        print('READ OK')
-        rows = random.sample(voter_file.index, 10000)
-        voter_file = voter_file.ix[rows]
-        voter_file = preprocess_voter(voter_file, type='block')
+        census, True)
 
+    print('READ VOTER FILE')
+    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', type='block', sample=1000)
+    print('READ OK')
     print('Sample size %d' % len(voter_file))
     surname = voter_file['lastname']
     cbg2000 = voter_file['gisjoin00']
