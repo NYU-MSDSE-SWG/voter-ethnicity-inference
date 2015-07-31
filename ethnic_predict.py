@@ -46,14 +46,15 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
         ['white', 'black', 'asian', 'other', 'hispanic']]
     location_ethnic_p = location_ethnic_prob.loc[cbg2000][
         ['white', 'black', 'asian', 'other', 'hispanic']]
-    ethnic_pred_prob = []
-    ethnic_pred_race = []
-    for i in range(len(lastname)):
-        numerator = location_ethnic_p.iloc[i] * name_p.iloc[i]
-        denominator = numerator.sum()
-        ans = (numerator / denominator).fillna(0)
-        ethnic_pred_prob.append(ans)
-        ethnic_pred_race.append(ans.argmax())
+    name_p = name_p.reset_index().drop('name', axis=1)
+    location_ethnic_p = location_ethnic_p.reset_index().drop('GISJOIN', axis=1)
+    numerator = location_ethnic_p * name_p
+    denominator = numerator.sum(axis=1)
+    ans = numerator.div(denominator, axis='index').fillna(0)
+
+    ethnic_pred_race = ans.idxmax(axis=1).tolist()
+    ethnic_pred_prob = ans.max(axis=1).tolist()
+
     if verbose_prob:
         return ethnic_pred_race, ethnic_pred_prob
     else:
@@ -84,7 +85,7 @@ def main():
         census, True)
 
     print('READ VOTER FILE')
-    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', type='block', sample=1000)
+    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=1000)
     print('READ OK')
     print('Sample size %d' % len(voter_file))
     surname = voter_file['lastname']
