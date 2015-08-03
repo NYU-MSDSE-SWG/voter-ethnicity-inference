@@ -1,4 +1,5 @@
-import random
+from tempfile import mkdtemp
+from joblib import Memory
 import pandas as pd
 import numpy as np
 
@@ -44,22 +45,24 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
     lastname, cbg2000 = validate_input(lastname, cbg2000)
     name_p = name_prob.loc[lastname][
         ['white', 'black', 'asian', 'other', 'hispanic']]
-    location_ethnic_p = location_ethnic_prob.loc[cbg2000][
-        ['white', 'black', 'asian', 'other', 'hispanic']]
-    name_p = name_p.reset_index().drop('name', axis=1)
-    location_ethnic_p = location_ethnic_p.reset_index().drop('GISJOIN', axis=1)
-    numerator = location_ethnic_p * name_p
-    denominator = numerator.sum(axis=1)
-    ans = numerator.div(denominator, axis='index').fillna(0)
+    if len(cbg2000) != 0:
+        location_ethnic_p = location_ethnic_prob.loc[cbg2000][
+            ['white', 'black', 'asian', 'other', 'hispanic']]
+        name_p = name_p.reset_index().drop('name', axis=1)
+        location_ethnic_p = location_ethnic_p.reset_index().drop('GISJOIN', axis=1)
+        numerator = location_ethnic_p * name_p
+        denominator = numerator.sum(axis=1)
+        ans = numerator.div(denominator, axis='index').fillna(0)
 
-    ethnic_pred_race = ans.idxmax(axis=1).tolist()
-    ethnic_pred_prob = ans.max(axis=1).tolist()
-
+        ethnic_pred_race = ans.idxmax(axis=1).tolist()
+        ethnic_pred_prob = ans.max(axis=1).tolist()
+    else:
+        ethnic_pred_race = name_p.idxmax(axis=1).tolist()
+        ethnic_pred_prob = name_p.max(axis=1).tolist()
     if verbose_prob:
         return ethnic_pred_race, ethnic_pred_prob
     else:
         return ethnic_pred_race
-
 
 def main():
     """
@@ -75,7 +78,7 @@ def main():
            6. Put all of data described above into predict_ethnic() to get
               the predicted ethnic
            7. Use metric to measure the performance if needed.
-    :return:
+    Note: If cbg2000 is an empty list, it will only use name to do prediction
     """
     name_prob = preprocess_surname('./data/surname_list/app_c.csv')
     census = preprocess_census(
@@ -85,7 +88,7 @@ def main():
         census, True)
 
     print('READ VOTER FILE')
-    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=1000)
+    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=10)
     print('READ OK')
     print('Sample size %d' % len(voter_file))
     surname = voter_file['lastname']

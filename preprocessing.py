@@ -279,7 +279,7 @@ def validate_input(lastname, cbg2000):
         lastname_list = [lastname]
     if isinstance(cbg2000, str):
         cbg2000_list = [cbg2000]
-    if len(cbg2000_list) != len(lastname_list):
+    if len(cbg2000_list) != len(lastname_list) and len(cbg2000) > 0:
         raise Exception(
             'Input lastname list and cbg2000 list should have same length')
     return lastname_list, cbg2000_list
