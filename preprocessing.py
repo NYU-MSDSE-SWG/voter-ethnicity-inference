@@ -185,13 +185,27 @@ def preprocess_census(file_loc, transform=False, census_type='group'):
         return census
 
     elif census_type == 'block':
-        census = census[['GISJOIN', 'FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']]
-        census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']] = \
-            census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']].astype(float)
-        census['total'] = census.sum(axis=1)
-        col_dict = {'FX1001': 'white', 'FX1002': 'black', 'FX1003': 'indian_alaska',
-                    'FX1004': 'asian', 'FX1005': 'hawaiian_islander', 'FX1006': 'other',
-                    'FXZ001': 'hispanic'}
+        # Census 2000
+        if 'FX1001' in census.columns:
+            census = census[['GISJOIN', 'FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']]
+            census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']] = \
+                census[['FX1001', 'FX1002', 'FX1003', 'FX1004','FX1005','FX1006','FXZ001']].astype(float)
+            census['total'] = census.sum(axis=1)
+            col_dict = {'FX1001': 'white', 'FX1002': 'black', 'FX1003': 'indian_alaska',
+                        'FX1004': 'asian', 'FX1005': 'hawaiian_islander', 'FX1006': 'other',
+                        'FXZ001': 'hispanic'}
+        # Census 2010
+        elif 'H7Z010' in census.columns:
+            census = census[['GISJOIN', 'H7Z003', 'H7Z004', 'H7Z005', 'H7Z006','H7Z007','H7Z008','H7Z010']]
+            census[['H7Z003', 'H7Z004', 'H7Z005', 'H7Z006','H7Z007','H7Z008','H7Z010']] = \
+                census[['H7Z003', 'H7Z004', 'H7Z005', 'H7Z006','H7Z007','H7Z008','H7Z010']].astype(float)
+            census['total'] = census.sum(axis=1)
+            col_dict = {'H7Z003': 'white', 'H7Z004': 'black', 'H7Z005': 'indian_alaska',
+                        'H7Z006': 'asian', 'H7Z007': 'hawaiian_islander', 'H7Z008': 'other',
+                        'H7Z010': 'hispanic'}
+        else:
+            raise Exception('Unknown census file')
+
         census.rename(columns=col_dict, inplace=True)
         census.loc[:, 'asian'] = census.loc[
             :, 'asian'] + census.loc[:, 'hawaiian_islander']
@@ -205,7 +219,6 @@ def preprocess_census(file_loc, transform=False, census_type='group'):
         census['perc'] = census['total'] / census['total'].sum()
         census.index = census['GISJOIN']
         return census
-
     else:
         raise Exception('Undefined census type %s' %census_type)
 
@@ -313,7 +326,7 @@ def preprocess_voter(file_loc, census_type='group', sample=0):
     census block group file.
     :param file_loc: string
     :param type: string, 'group' or 'block'
-    :param sample:
+    :param sample: int, if greater than 0, it will sample rows from voter file
     :return:
     """
     test = read_voter(file_loc)

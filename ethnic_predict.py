@@ -3,7 +3,7 @@ from joblib import Memory
 import pandas as pd
 import numpy as np
 
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_curve, auc
 
 from preprocessing import (validate_input, preprocess_surname,
                            preprocess_census, preprocess_voter,
@@ -30,7 +30,7 @@ def transform_output(x):
         raise Exception('Undefined ethnic %s' % x)
 
 
-def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_prob=False):
+def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_prob=False, verbose_all=False):
     """
     Predicting ethnicity given surname(lastname), location code(cbg2000),
     name probability(name_prob), location probability conditioned on ethnicity(location_ethnic_prob)
@@ -39,6 +39,8 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
     :param name_prob: DataFrame, output from preprocess_surname()
     :param location_ethnic_prob: DataFrame, output from create_location_ethnic_prob()
     :param verbose_prob: Boolean, if True, will return probability for predicted ethnic
+    :param verbose_all: Boolean, if True and verbose_prob is True, will return probability for all ethnic
+            (useful when drawing roc curve)
     :return: ethnic_pred_race: list, containing predicted ethnic
              ethnic_pred_prob: list, containing probability of predicted ethnic
     """
@@ -59,10 +61,15 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
     else:
         ethnic_pred_race = name_p.idxmax(axis=1).tolist()
         ethnic_pred_prob = name_p.max(axis=1).tolist()
+        ans = name_p.fillna(0)
     if verbose_prob:
-        return ethnic_pred_race, ethnic_pred_prob
+        if verbose_all:
+            return ethnic_pred_race, ans
+        else:
+            return ethnic_pred_race, ethnic_pred_prob
     else:
         return ethnic_pred_race
+
 
 def main():
     """
@@ -80,19 +87,25 @@ def main():
            7. Use metric to measure the performance if needed.
     Note: If cbg2000 is an empty list, it will only use name to do prediction
     """
+    print('READ SURNAME LIST')
     name_prob = preprocess_surname('./data/surname_list/app_c.csv')
+    #census = preprocess_census(
+    #    './data/Census2000_BG/nhgis0061_ds147_2000_block.csv',
+    #    transform=False, census_type='block')
+    print('READ CENSUS FILE')
     census = preprocess_census(
-        './data/Census2000_BG/nhgis0061_ds147_2000_block.csv',
+        './data/Census2000_BG/nhgis0062_ds172_2010_block.csv',
         transform=False, census_type='block')
     location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(
         census, True)
 
     print('READ VOTER FILE')
-    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=10)
+    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=0)
     print('READ OK')
     print('Sample size %d' % len(voter_file))
     surname = voter_file['lastname']
-    cbg2000 = voter_file['gisjoin00']
+    cbg2000 = voter_file['gisjoin10']
+    #cbg2000 = voter_file['gisjoin00']
     predict = predict_ethnic(
         surname, cbg2000, name_prob, location_ethnic_prob, False)
     predict = pd.Series(predict).apply(transform_output)
