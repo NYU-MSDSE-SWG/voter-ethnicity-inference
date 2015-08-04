@@ -81,11 +81,13 @@ def read_census(file_loc, census_type='group'):
             census = pd.read_csv(file_loc, dtype=object)
             return census
     except:
-        raise Exception('Cannot open census csv file. Please download correct'
-                        'block group data. eg: '
+        raise Exception('Cannot open census csv file. Please make sure to '
+                        'choose correct census_type, and download correct '
+                        'census data. eg: census block group level from: '
                         'http://old.socialexplorer.com/pub/reportdata/'
                         'CsvResults.aspx?reportid=R10950075 '
-                        'or block data from NHGIS')
+                        'or census block level from NHGIS '
+                        'https://www.nhgis.org')
 
     col_dict = {'SE_T015_001': 'total', 'SE_T015_003': 'white', 'SE_T015_004':
                 'black', 'SE_T015_005': 'indian_alaska', 'SE_T015_006':
