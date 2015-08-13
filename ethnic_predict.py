@@ -1,33 +1,13 @@
-from tempfile import mkdtemp
-from joblib import Memory
 import pandas as pd
 import numpy as np
+from sklearn.externals import joblib
 
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_curve, auc
 
 from preprocessing import (validate_input, preprocess_surname,
                            preprocess_census, preprocess_voter,
-                           create_location_ethnic_prob)
-
-
-def transform_output(x):
-    """
-    Tranform predict_ethnic output from ethnicity name to code in order to match voter's file
-    :param x: string
-    :return: int
-    """
-    if x == 'white':
-        return 5
-    elif x == 'black':
-        return 3
-    elif x == 'asian':
-        return 2
-    elif x == 'hispanic':
-        return 4
-    elif x == 'other':
-        return 6
-    else:
-        raise Exception('Undefined ethnic %s' % x)
+                           create_location_ethnic_prob,
+                           transform_output, create_name_predictor)
 
 
 def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_prob=False, verbose_all=False):
@@ -89,23 +69,41 @@ def main():
     """
     print('READ SURNAME LIST')
     name_prob = preprocess_surname('./data/surname_list/app_c.csv')
-    #census = preprocess_census(
-    #    './data/Census2000_BG/nhgis0061_ds147_2000_block.csv',
-    #    transform=False, census_type='block')
+
     print('READ CENSUS FILE')
     census = preprocess_census(
         './data/Census2000_BG/nhgis0062_ds172_2010_block.csv',
         transform=False, census_type='block')
+
+    print('CREATE PROBABILITY MATRIX BASED ON CENSUS FILE')
     location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(
         census, True)
 
     print('READ VOTER FILE')
-    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=0)
-    print('READ OK')
+    # If remove_flag == True, it will remove voters whose surname are not in census surname list
+    # 
+    # If remove_flag == False, it will keep those voters and use n-gram + logistic regression
+    # to predict their ethnicity based on surname
+    remove_flag = False
+    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=0, remove_name=remove_flag)
+
+    if not remove_flag:
+        print('USE N-GRAM TO PREDICT VOTER NOT ON THE NAME LIST')
+        notinlistname = np.setdiff1d(voter_file['lastname'], name_prob.index)
+        try:
+            n_gram_model = joblib.load('./model/n_gram.pkl')
+            classifier = joblib.load('./model/classifier.pkl')
+        except:
+            n_gram_model, classifier = create_name_predictor('./data/surname_list/app_c.csv')
+        notinname_prob = classifier.predict_proba(n_gram_model.transform(notinlistname))
+        notinname_df = pd.DataFrame(notinname_prob, columns=classifier.classes_,index=notinlistname)
+        notinname_df.index.name = 'name'
+        name_prob = name_prob.append(notinname_df)
     print('Sample size %d' % len(voter_file))
+
+    print('START PREDICTING')
     surname = voter_file['lastname']
     cbg2000 = voter_file['gisjoin10']
-    #cbg2000 = voter_file['gisjoin00']
     predict = predict_ethnic(
         surname, cbg2000, name_prob, location_ethnic_prob, False)
     predict = pd.Series(predict).apply(transform_output)

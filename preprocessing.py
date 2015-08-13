@@ -1,6 +1,31 @@
 import pandas as pd
 import numpy as np
 import random
+import string
+import os
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.externals import joblib
+
+
+def transform_output(x):
+    """
+    Tranform predict_ethnic output from ethnicity name to code in order to match voter's file
+    :param x: string
+    :return: int
+    """
+    if x == 'white':
+        return 5
+    elif x == 'black':
+        return 3
+    elif x == 'asian':
+        return 2
+    elif x == 'hispanic':
+        return 4
+    elif x == 'other':
+        return 6
+    else:
+        raise Exception('Undefined ethnic %s' % x)
 
 
 def preprocess_surname(file_loc):
@@ -39,7 +64,7 @@ def preprocess_surname(file_loc):
     name_prob['perc'] = name_prob['perc'] / float(100000)
     name_prob.rename(columns={'api': 'asian'}, inplace=True)
     name_prob.index = name_prob['name']
-    name = name_prob.drop('name', 1)
+    name = name_prob.drop(['name', 'aian', '2race'], 1)
     return name
 
 
@@ -320,7 +345,7 @@ def read_voter(file_loc):
         raise Exception("Please input string as file location")
 
 
-def preprocess_voter(file_loc, census_type='group', sample=0):
+def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
     """
     Preprocess voter's file. It will drop rows with na in ['voter_id', 'gisjoin10',
     'gisjoin00', 'lastname', 'firstname', 'gender', 'race', 'birth_date']. If
@@ -329,6 +354,8 @@ def preprocess_voter(file_loc, census_type='group', sample=0):
     :param file_loc: string
     :param type: string, 'group' or 'block'
     :param sample: int, if greater than 0, it will sample rows from voter file
+    :param remove_name: boolean, if True, it will remove voter whose surname is not in
+           census name list.
     :return:
     """
     test = read_voter(file_loc)
@@ -358,13 +385,57 @@ def preprocess_voter(file_loc, census_type='group', sample=0):
     # remove rows having lastname not in census name list
     test.race = test.race.astype(float).astype(int)
     test['lastname'] = test['lastname'].map(lambda x: x.upper())
-    name_prob = preprocess_surname('./data/surname_list/app_c.csv')
-    intlastname = np.in1d(test['lastname'], name_prob.index)
-    test = test[intlastname]
+    test['lastname'] = test['lastname'].apply(string.strip)
+    if remove_name == True:
+        name_prob = preprocess_surname('./data/surname_list/app_c.csv')
+        intlastname = np.in1d(test['lastname'], name_prob.index)
+        test = test[intlastname]
 
     # combine some ethnics to 'other'
     test.race = test.race.replace({7: 6, 1: 6, 9: 6})
     return test
+
+
+def create_name_predictor(file_loc, n_gram=(2,5), save=True):
+    """
+    Using character level n_gram and logistic regression to train a classification
+    model to predict ethnicity based on surname only.
+    :param file_loc: string, surname list file location
+    :param n_gram: tuple (min_n, max_n), The lower and upper boundary of the range
+    of n-values for different n-grams to be extracted. All values of n such that
+    min_n <= n <= max_n will be used.
+    :param save: boolean, if True, it will save models to ./model/ directory
+    :return: n_gram_model to vectorize string and classifier to do classification
+    """
+    name_prob = preprocess_surname(file_loc).fillna(0)
+    name_prob = name_prob[pd.Series(name_prob.index).notnull().tolist()]
+    name_prob = name_prob[['white','black','asian','hispanic','other']]
+    name_prob['label'] = name_prob.idxmax(axis=1)
+    name_list = pd.Series(name_prob.index.tolist())
+    n_gram_model = CountVectorizer(analyzer='char', ngram_range=n_gram)
+    train_x = n_gram_model.fit_transform(name_list.tolist())
+    classifier = LogisticRegression(multi_class='multinomial', solver='lbfgs')
+    classifier.fit(train_x, name_prob['label'])
+    if save == True:
+        if not os.path.exists('./model/'):
+            os.makedirs('./model/')
+        joblib.dump(n_gram_model, './model/n_gram.pkl')
+        joblib.dump(classifier, './model/classifier.pkl')
+    return n_gram_model, classifier
+
+
+def n_gram_name_prob(n_gram_model, classifier, surname):
+    """
+    Create surname_ethnicity probability dataframe using n_gram_model and classifier.
+    :param n_gram_model: saved n_gram_model or returned by create_name_predictor
+    :param classifier: saved classifier_model or returned by create_name_predictor
+    :param surname: list, list of surname
+    :return: DataFrame, containing surname_ethnicity probability
+    """
+    name_col = classifier.classes_
+    test_x = n_gram_model.transform(surname)
+    predict_prob = classifier.predict_proba(test_x)
+    return pd.DataFrame(predict_prob, columns=name_col, index=surname)
 
 
 if __name__ == '__main__':
