@@ -31,7 +31,8 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
         location_ethnic_p = location_ethnic_prob.loc[cbg2000][
             ['white', 'black', 'asian', 'other', 'hispanic']]
         name_p = name_p.reset_index().drop('name', axis=1)
-        location_ethnic_p = location_ethnic_p.reset_index().drop('GISJOIN', axis=1)
+        location_ethnic_p = location_ethnic_p.reset_index()
+        location_ethnic_p = location_ethnic_p[['white', 'black', 'asian', 'other', 'hispanic']]
         numerator = location_ethnic_p * name_p
         denominator = numerator.sum(axis=1)
         ans = numerator.div(denominator, axis='index').fillna(0)
@@ -81,12 +82,12 @@ def main():
 
     print('READ VOTER FILE')
     # If remove_flag == True, it will remove voters whose surname are not in census surname list
-    # 
+    #
     # If remove_flag == False, it will keep those voters and use n-gram + logistic regression
     # to predict their ethnicity based on surname
-    remove_flag = False
+    remove_flag = True
     voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=0, remove_name=remove_flag)
-
+    print('FINISH PREPROCESSING VOTER')
     if not remove_flag:
         print('USE N-GRAM TO PREDICT VOTER NOT ON THE NAME LIST')
         notinlistname = np.setdiff1d(voter_file['lastname'], name_prob.index)
@@ -100,14 +101,15 @@ def main():
         notinname_df.index.name = 'name'
         name_prob = name_prob.append(notinname_df)
     print('Sample size %d' % len(voter_file))
-
     print('START PREDICTING')
     surname = voter_file['lastname']
     cbg2000 = voter_file['gisjoin10']
-    predict = predict_ethnic(
-        surname, cbg2000, name_prob, location_ethnic_prob, False)
+    predict, predict_ethnic_prob = predict_ethnic(
+        surname, cbg2000, name_prob, location_ethnic_prob, True, True)
+    voter_file[['white', 'black', 'asian', 'other', 'hispanic']] = predict_ethnic_prob
     predict = pd.Series(predict).apply(transform_output)
-    predict.to_pickle('./out_blk.pkl')
+    voter_file['predict_race'] = predict
+    voter_file.to_csv('./voter_file_predicted.csv')
     print(accuracy_score(predict, voter_file['race']))
     print(np.sum(predict == voter_file['race']) / float(len(predict)))
     print(classification_report(predict, voter_file['race']))

@@ -8,6 +8,22 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.externals import joblib
 
 
+def nc_race(x):
+    if 'ethnic_code' in x.index:
+        if x.ethnic_code == 'HL':
+            return 4
+        else:
+            if x.race_code == 'W':
+                return 5
+            elif x.race_code == 'B':
+                return 3
+            elif x.race_code == 'A':
+                return 2
+            else:
+                return 6
+    else:
+        return x
+
 def transform_output(x):
     """
     Tranform predict_ethnic output from ethnicity name to code in order to match voter's file
@@ -359,6 +375,7 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
     :return:
     """
     test = read_voter(file_loc)
+    print("Finish reading from file")
     if sample > 0:
         rows = random.sample(test.index, sample)
         test = test.ix[rows]
@@ -375,14 +392,30 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
         test.loc[:, 'bctcb2000'] = test.loc[:, 'county'] + \
             test.loc[:, 'tract'] + test.loc[:, 'blkgroup']
     elif census_type == 'block':
-        id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
-                  'firstname', 'gender', 'race', 'birth_date']
-        test = test[id_use]
-        test = test.dropna(axis=0)
+        try:
+            id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
+                      'firstname', 'gender', 'race', 'birth_date']
+            test = test[id_use]
+            test = test.dropna(axis=0)
+        except:
+            id_use = ['voter_reg_num', 'gisjoin10', 'gisjoin00',
+                      'last_name', 'first_name', 'sex_code', 'ethnic_code', 'race_code']
+            test = test[id_use]
+            test = test.dropna(axis=0)
+
+        col_dict = {'voter_reg_num': 'voter_id', 'last_name': 'lastname',
+                    'first_name': 'firstname'}
+        test.rename(columns=col_dict, inplace=True)
+
     else:
         raise Exception('Undefined type %s' % census_type)
 
     # remove rows having lastname not in census name list
+
+    if 'ethnic_code' in test.columns:
+        print("Starting applying race")
+        test['race'] = test.apply(nc_race, axis=1)
+
     test.race = test.race.astype(float).astype(int)
     test['lastname'] = test['lastname'].map(lambda x: x.upper())
     test['lastname'] = test['lastname'].apply(string.strip)
