@@ -9,20 +9,17 @@ from sklearn.externals import joblib
 
 
 def nc_race(x):
-    if 'ethnic_code' in x.index:
-        if x.ethnic_code == 'HL':
-            return 4
-        else:
-            if x.race_code == 'W':
-                return 5
-            elif x.race_code == 'B':
-                return 3
-            elif x.race_code == 'A':
-                return 2
-            else:
-                return 6
+    if x.ethnic_code.strip() == 'HL':
+        return 4
     else:
-        return x
+        if x.race_code.strip() == 'W':
+            return 5
+        elif x.race_code.strip() == 'B':
+            return 3
+        elif x.race_code.strip() == 'A':
+            return 2
+        else:
+            return 6
 
 def transform_output(x):
     """
@@ -414,7 +411,8 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
 
     if 'ethnic_code' in test.columns:
         print("Starting applying race")
-        test['race'] = test.apply(nc_race, axis=1)
+        form_race = test.apply(nc_race, axis=1)
+        test['race'] = form_race
 
     test.race = test.race.astype(float).astype(int)
     test['lastname'] = test['lastname'].map(lambda x: x.upper())

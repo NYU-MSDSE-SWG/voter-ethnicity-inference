@@ -73,7 +73,7 @@ def main():
 
     print('READ CENSUS FILE')
     census = preprocess_census(
-        './data/Census2000_BG/nhgis0062_ds172_2010_block.csv',
+        './data/Census2000_BG/nhgis0065_ds172_2010_block.csv',
         transform=False, census_type='block')
 
     print('CREATE PROBABILITY MATRIX BASED ON CENSUS FILE')
@@ -86,7 +86,7 @@ def main():
     # If remove_flag == False, it will keep those voters and use n-gram + logistic regression
     # to predict their ethnicity based on surname
     remove_flag = True
-    voter_file = preprocess_voter('./data/FL1_voters_geo_covariates.csv', census_type='block', sample=0, remove_name=remove_flag)
+    voter_file = preprocess_voter('./data/NC_voter_geo_character.dta', census_type='block', sample=0, remove_name=remove_flag)
     print('FINISH PREPROCESSING VOTER')
     if not remove_flag:
         print('USE N-GRAM TO PREDICT VOTER NOT ON THE NAME LIST')
