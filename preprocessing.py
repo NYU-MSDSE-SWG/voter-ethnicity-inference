@@ -394,8 +394,12 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
             test.loc[:, 'tract'] + test.loc[:, 'blkgroup']
     elif census_type == 'block':
         try:
-            id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
-                      'firstname', 'gender', 'race', 'birth_date']
+            if 'race' in test.columns:
+                id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
+                          'firstname', 'gender', 'race', 'birth_date']
+            else:
+                id_use = ['voter_id', 'gisjoin10', 'gisjoin00', 'lastname',
+                          'firstname', 'gender', 'birthday']
             test = test[id_use]
             test = test.dropna(axis=0)
         except:
@@ -418,9 +422,6 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
         form_race = test.apply(nc_race, axis=1)
         test['race'] = form_race
 
-    if 'race' in test.columns:
-        test.race = test.race.astype(float).astype(int)
-
     test['lastname'] = test['lastname'].map(lambda x: x.upper())
     test['lastname'] = test['lastname'].apply(string.strip)
     if remove_name == True:
@@ -429,7 +430,9 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
         test = test[intlastname]
 
     # combine some ethnics to 'other'
-    test.race = test.race.replace({7: 6, 1: 6, 9: 6})
+    if 'race' in test.columns:
+        test.race = test.race.astype(float).astype(int)
+        test.race = test.race.replace({7: 6, 1: 6, 9: 6})
     return test
 
 

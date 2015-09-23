@@ -85,8 +85,8 @@ def main():
     #
     # If remove_flag == False, it will keep those voters and use n-gram + logistic regression
     # to predict their ethnicity based on surname
-    remove_flag = True
-    voter_file = preprocess_voter('./data/NC_voter_geo_character.csv', census_type='block', sample=0, remove_name=remove_flag)
+    remove_flag = False
+    voter_file = preprocess_voter('./data/NYS2010_NYC_voter_geo_character.csv', census_type='block', sample=0, remove_name=remove_flag)
     print('FINISH PREPROCESSING VOTER')
     if not remove_flag:
         print('USE N-GRAM TO PREDICT VOTER NOT ON THE NAME LIST')
@@ -111,12 +111,13 @@ def main():
     voter_file[['white', 'black', 'asian', 'other', 'hispanic']] = predict_ethnic_prob
     predict = pd.Series(predict).apply(transform_output)
     voter_file['predict_race'] = predict
+    print('SAVE TO FILE')
     voter_file.to_csv('./voter_file_predicted.csv')
-    print(accuracy_score(predict, voter_file['race']))
-    print(np.sum(predict == voter_file['race']) / float(len(predict)))
-    print(classification_report(predict, voter_file['race']))
-    print(confusion_matrix(predict, voter_file['race']))
-
+    if 'race' in voter_file.columns:
+        print('Accuracy: %f' % accuracy_score(predict, voter_file['race']))
+        print(classification_report(predict, voter_file['race']))
+        print(confusion_matrix(predict, voter_file['race']))
+    print('FINISH')
 
 if __name__ == '__main__':
     main()
