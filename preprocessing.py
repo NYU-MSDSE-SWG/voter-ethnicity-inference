@@ -378,8 +378,12 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
         test = test.ix[rows]
 
     if census_type == 'group':
-        id_use = ['voter_id', 'county', 'tract', 'blkgroup', 'lastname',
-                  'firstname', 'gender', 'race', 'birth_date', '_merge']
+        if 'race' in test.columns:
+            id_use = ['voter_id', 'county', 'tract', 'blkgroup', 'lastname',
+                      'firstname', 'gender', 'race', 'birth_date', '_merge']
+        else:
+            id_use = ['voter_id', 'county', 'tract', 'blkgroup', 'lastname',
+                      'firstname', 'gender', 'birth_date', '_merge']
         str_use = ['county', 'tract', 'blkgroup']
         test = test[id_use]
         test = test.dropna(axis=0)
@@ -414,7 +418,9 @@ def preprocess_voter(file_loc, census_type='group', sample=0, remove_name=True):
         form_race = test.apply(nc_race, axis=1)
         test['race'] = form_race
 
-    test.race = test.race.astype(float).astype(int)
+    if 'race' in test.columns:
+        test.race = test.race.astype(float).astype(int)
+
     test['lastname'] = test['lastname'].map(lambda x: x.upper())
     test['lastname'] = test['lastname'].apply(string.strip)
     if remove_name == True:

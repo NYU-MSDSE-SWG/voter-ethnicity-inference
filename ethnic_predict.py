@@ -86,7 +86,7 @@ def main():
     # If remove_flag == False, it will keep those voters and use n-gram + logistic regression
     # to predict their ethnicity based on surname
     remove_flag = True
-    voter_file = preprocess_voter('./data/NC_voter_geo_character.dta', census_type='block', sample=0, remove_name=remove_flag)
+    voter_file = preprocess_voter('./data/NC_voter_geo_character.csv', census_type='block', sample=0, remove_name=remove_flag)
     print('FINISH PREPROCESSING VOTER')
     if not remove_flag:
         print('USE N-GRAM TO PREDICT VOTER NOT ON THE NAME LIST')
@@ -106,6 +106,8 @@ def main():
     cbg2000 = voter_file['gisjoin10']
     predict, predict_ethnic_prob = predict_ethnic(
         surname, cbg2000, name_prob, location_ethnic_prob, True, True)
+    voter_file = voter_file.reset_index()
+    voter_file = voter_file.drop('index', 1)
     voter_file[['white', 'black', 'asian', 'other', 'hispanic']] = predict_ethnic_prob
     predict = pd.Series(predict).apply(transform_output)
     voter_file['predict_race'] = predict
