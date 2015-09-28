@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
+import os
 from sklearn.externals import joblib
 
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_curve, auc
 
-from preprocessing import (validate_input, preprocess_surname,
-                           preprocess_census, preprocess_voter,
+from simplified_preprocessing import (validate_input, preprocess_surname,
+                           read_census, read_voter,
                            create_location_ethnic_prob,
                            transform_output, create_name_predictor)
 
@@ -26,13 +27,13 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
     """
     lastname, cbg2000 = validate_input(lastname, cbg2000)
     name_p = name_prob.loc[lastname][
-        ['white', 'black', 'asian', 'other', 'hispanic']]
+        ['white', 'black', 'asian', 'other', 'latino']]
     if len(cbg2000) != 0:
         location_ethnic_p = location_ethnic_prob.loc[cbg2000][
-            ['white', 'black', 'asian', 'other', 'hispanic']]
+            ['white', 'black', 'asian', 'other', 'latino']]
         name_p = name_p.reset_index().drop('name', axis=1)
         location_ethnic_p = location_ethnic_p.reset_index()
-        location_ethnic_p = location_ethnic_p[['white', 'black', 'asian', 'other', 'hispanic']]
+        location_ethnic_p = location_ethnic_p[['white', 'black', 'asian', 'other', 'latino']]
         numerator = location_ethnic_p * name_p
         denominator = numerator.sum(axis=1)
         ans = numerator.div(denominator, axis='index').fillna(0)
@@ -52,45 +53,17 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
         return ethnic_pred_race
 
 
-def main():
-    """
-    Usage: 1. Use preprocess_surname() to get name_prob
-           2. Use preprocess_census() to get cleaned census
-           3. Use create_location_ethnic_prob() to get location_ethnic_prob
-              and ethnic_perc
-           4. Use preprocess_voter() to get cleaned voter's file
-           5. Specify the column containing surname and geolocation code.
-              eg, 'lastname' and 'gisjoin00'
-              Please note that geolocation code in voter's file should match
-              with census file.
-           6. Put all of data described above into predict_ethnic() to get
-              the predicted ethnic
-           7. Use metric to measure the performance if needed.
-    Note: If cbg2000 is an empty list, it will only use name to do prediction
-    """
-    print('READ SURNAME LIST')
-    name_prob = preprocess_surname('./data/surname_list/app_c.csv')
+def voter_file_predict(voter_loc, census_loc, namelist_loc, remove_name=False, sample=0):
+    name_prob = preprocess_surname(namelist_loc)
+    census = read_census(census_loc)
+    voter = read_voter(voter_loc, sample=sample, remove_name=remove_name)
+    file_name = os.path.split(voter_loc)[1]
+    print('Predicting on %s' % file_name)
+    location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(census, True)
 
-    print('READ CENSUS FILE')
-    census = preprocess_census(
-        './data/Census2000_BG/nhgis0065_ds172_2010_block.csv',
-        transform=False, census_type='block')
-
-    print('CREATE PROBABILITY MATRIX BASED ON CENSUS FILE')
-    location_ethnic_prob, ethnic_perc = create_location_ethnic_prob(
-        census, True)
-
-    print('READ VOTER FILE')
-    # If remove_flag == True, it will remove voters whose surname are not in census surname list
-    #
-    # If remove_flag == False, it will keep those voters and use n-gram + logistic regression
-    # to predict their ethnicity based on surname
-    remove_flag = False
-    voter_file = preprocess_voter('./data/NYS2010_NYC_voter_geo_character.csv', census_type='block', sample=0, remove_name=remove_flag)
-    print('FINISH PREPROCESSING VOTER')
-    if not remove_flag:
+    if not remove_name:
         print('USE N-GRAM TO PREDICT VOTER NOT ON THE NAME LIST')
-        notinlistname = np.setdiff1d(voter_file['lastname'], name_prob.index)
+        notinlistname = np.setdiff1d(voter['lastname'], name_prob.index)
         try:
             n_gram_model = joblib.load('./model/n_gram.pkl')
             classifier = joblib.load('./model/classifier.pkl')
@@ -100,24 +73,35 @@ def main():
         notinname_df = pd.DataFrame(notinname_prob, columns=classifier.classes_,index=notinlistname)
         notinname_df.index.name = 'name'
         name_prob = name_prob.append(notinname_df)
-    print('Sample size %d' % len(voter_file))
+
+    print('Sample size %d' % len(voter))
     print('START PREDICTING')
-    surname = voter_file['lastname']
-    cbg2000 = voter_file['gisjoin10']
+    surname = voter['lastname']
+    cbg2000 = voter['gisjoin10']
     predict, predict_ethnic_prob = predict_ethnic(
         surname, cbg2000, name_prob, location_ethnic_prob, True, True)
-    voter_file = voter_file.reset_index()
-    voter_file = voter_file.drop('index', 1)
-    voter_file[['white', 'black', 'asian', 'other', 'hispanic']] = predict_ethnic_prob
+    voter = voter.reset_index()
+    voter = voter.drop('index', 1)
+    voter[['white', 'black', 'asian', 'other', 'latino']] = predict_ethnic_prob
     predict = pd.Series(predict).apply(transform_output)
-    voter_file['predict_race'] = predict
-    print('SAVE TO FILE')
-    voter_file.to_csv('./voter_file_predicted.csv')
-    if 'race' in voter_file.columns:
-        print('Accuracy: %f' % accuracy_score(predict, voter_file['race']))
-        print(classification_report(predict, voter_file['race']))
-        print(confusion_matrix(predict, voter_file['race']))
+    voter['predict_race'] = predict
+    voter.to_csv('./voter_file_predicted.csv')
+    if 'race' in voter.columns:
+        print('Accuracy: %f' % accuracy_score(predict, voter['race']))
+        print(classification_report(predict, voter['race']))
+        print(confusion_matrix(predict, voter['race']))
     print('FINISH')
+    return voter
+
+
+def main():
+    namelist_loc = './data/surname_list/app_c.csv'
+    census_loc = './data/census/CensusBLK2010_FL_new.csv'
+    voter_loc = './data/voter/FL_voterfile.csv'
+
+    ans = voter_file_predict(voter_loc=voter_loc, census_loc=census_loc, namelist_loc=namelist_loc,
+                             remove_name=False, sample=0)
+
 
 if __name__ == '__main__':
     main()
