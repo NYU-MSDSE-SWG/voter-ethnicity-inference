@@ -54,6 +54,19 @@ def predict_ethnic(lastname, cbg2000, name_prob, location_ethnic_prob, verbose_p
 
 
 def voter_file_predict(voter_loc, census_loc, namelist_loc, remove_name=False, sample=0):
+    """
+    Predict ethnicity on a voter file, using corresponding census file and name list.
+    voter file should have at least 'voter_id', 'gisjoin10', 'lastname', 'firstname'
+    columns, and if 'race' column exist, it will print prediction quality metrics
+    comparing with it.
+    :param voter_loc: string, voter file location
+    :param census_loc: string, census file location
+    :param namelist_loc: string, namelist file location
+    :param remove_name: Boolean, if True it will remove voters whose surname not in
+            name list
+    :param sample: int, if sample=n>0, it will sample n rows in voters file
+    :return: pd.DataFrame, having ethnicity prediction and probability
+    """
     name_prob = preprocess_surname(namelist_loc)
     census = read_census(census_loc)
     voter = read_voter(voter_loc, sample=sample, remove_name=remove_name)
@@ -70,7 +83,7 @@ def voter_file_predict(voter_loc, census_loc, namelist_loc, remove_name=False, s
         except:
             n_gram_model, classifier = create_name_predictor('./data/surname_list/app_c.csv')
         notinname_prob = classifier.predict_proba(n_gram_model.transform(notinlistname))
-        notinname_df = pd.DataFrame(notinname_prob, columns=classifier.classes_,index=notinlistname)
+        notinname_df = pd.DataFrame(notinname_prob, columns=classifier.classes_, index=notinlistname)
         notinname_df.index.name = 'name'
         name_prob = name_prob.append(notinname_df)
 
@@ -85,7 +98,6 @@ def voter_file_predict(voter_loc, census_loc, namelist_loc, remove_name=False, s
     voter[['white', 'black', 'asian', 'other', 'latino']] = predict_ethnic_prob
     predict = pd.Series(predict).apply(transform_output)
     voter['predict_race'] = predict
-    voter.to_csv('./voter_file_predicted.csv')
     if 'race' in voter.columns:
         print('Accuracy: %f' % accuracy_score(predict, voter['race']))
         print(classification_report(predict, voter['race']))
@@ -95,13 +107,14 @@ def voter_file_predict(voter_loc, census_loc, namelist_loc, remove_name=False, s
 
 
 def main():
-    namelist_loc = './data/surname_list/app_c.csv'
-    census_loc = './data/census/CensusBLK2010_FL_new.csv'
-    voter_loc = './data/voter/FL_voterfile.csv'
+    namelist_loc = './data/surname_list/app_c.csv'  # Surname list location
+    census_loc = './data/census/CensusBLK2010_NY_new.csv'  # Census file location
+    voter_loc = './data/voter/NYC2010_voterfile.csv'  # Voter file location
 
     ans = voter_file_predict(voter_loc=voter_loc, census_loc=census_loc, namelist_loc=namelist_loc,
                              remove_name=False, sample=0)
-
+    # Save ans to local file
+    ans.to_csv('./voter_file_predicted.csv')
 
 if __name__ == '__main__':
     main()
