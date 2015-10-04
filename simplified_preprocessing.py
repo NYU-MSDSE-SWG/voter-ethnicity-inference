@@ -113,7 +113,9 @@ def create_location_ethnic_prob(cleaned_census_df, return_ethnic_perc=False):
 
 def read_voter(file_loc, sample=0, remove_name=False):
     voter = pd.read_csv(file_loc)
-    if (voter.columns == [u'voter_id', u'gisjoin10', u'lastname', u'firstname', u'race']).all():
+    column_match = np.sum(np.in1d(np.array(['voter_id', 'gisjoin10', 'lastname', 'firstname']),
+                                  np.array(voter.columns)))
+    if column_match == 4:
         voter = voter.dropna(axis=0)
         voter['lastname'] = voter['lastname'].map(lambda x: x.upper())
         voter['lastname'] = voter['lastname'].apply(string.strip)
